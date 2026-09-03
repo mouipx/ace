@@ -9,7 +9,7 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose") version "2.1.0"
 }
 
-val appVersion = providers.gradleProperty("ace.version").orElse("0.1.10").get()
+val appVersion = providers.gradleProperty("ace.version").orElse("0.1.11").get()
 if (!Regex("""\d+\.\d+\.\d+""").matches(appVersion)) {
     throw GradleException("ace.version must use numeric x.y.z format for Windows packaging, got: $appVersion")
 }
