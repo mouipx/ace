@@ -25,19 +25,35 @@ internal data class HotkeyPresetDef(
 
 internal val deadEndHotkeyPresetCycle: List<HotkeyPresetDef> = listOf(
     HotkeyPresetDef("PISTOL", 35.0, 125.0, 1.45, 0.95, whole = true, shape = ProfileEditorEngine.CurveShape.FAST_RAMP),
-    HotkeyPresetDef("SHOTGUN", 80.0, 200.0, 1.25, 0.88, whole = true),
-    HotkeyPresetDef("SNIPER", 110.0, 300.0, 1.12, 1.00, whole = true),
+    HotkeyPresetDef("PISTOL + SHOTGUN", 55.0, 180.0, 1.35, 0.90, whole = false,
+        shape = ProfileEditorEngine.CurveShape.SMOOTH,
+        verticalStartIn = 85.0, verticalEndIn = 220.0, verticalPeak = 1.18,
+        verticalShape = ProfileEditorEngine.CurveShape.SOFT_START),
+    HotkeyPresetDef("SNIPER + SHOTGUN", 90.0, 240.0, 1.25, 0.92, whole = false,
+        shape = ProfileEditorEngine.CurveShape.SMOOTH,
+        verticalStartIn = 120.0, verticalEndIn = 300.0, verticalPeak = 1.10,
+        verticalShape = ProfileEditorEngine.CurveShape.SOFT_START),
     HotkeyPresetDef(
-        "SNIPER + SHOTGUN",
-        90.0,
-        240.0,
-        1.25,
-        0.92,
+        "ZAPPER + ELDER GUN + GOLD DIGGER",
+        45.0,
+        190.0,
+        1.38,
+        0.90,
         whole = false,
-        verticalStartIn = 120.0,
-        verticalEndIn = 300.0,
-        verticalPeak = 1.10,
+        shape = ProfileEditorEngine.CurveShape.FAST_RAMP,
+        verticalStartIn = 75.0,
+        verticalEndIn = 230.0,
+        verticalPeak = 1.18,
         verticalShape = ProfileEditorEngine.CurveShape.SOFT_START
+    ),
+    HotkeyPresetDef(
+        "SNIPER FALLBACK (3-SLOT)",
+        110.0,
+        300.0,
+        1.12,
+        1.00,
+        whole = true,
+        shape = ProfileEditorEngine.CurveShape.SMOOTH
     )
 )
 

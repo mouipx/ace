@@ -334,7 +334,7 @@ fun App(
             uiScope.launch {
                 client.apply(entry.settings).onSuccess {
                     hotkeyManager.start(entry.settings)
-                    logLine("HOTKEY CYCLE -> pistol / shotgun / sniper / sniper+shotgun")
+                    logLine("HOTKEY CYCLE -> pistol / pistol+shotgun / sniper+shotgun / zapper+elder+gold / sniper fallback")
                     logLine("✓ HOTKEYS ARMED → Ctrl+F1 low-sens, Ctrl+F2 high-sens, Ctrl+F3 accel on/off, Ctrl+Shift+F1 preset cycle")
                 }.onFailure {
                     logLine("✗ HOTKEYS FAILED → ${it.message}")

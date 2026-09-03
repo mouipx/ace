@@ -9,7 +9,13 @@ class HotkeyManagerTest {
     @Test
     fun deadEndHotkeyCycleMatchesPistolShotgunSniperLoadout() {
         assertEquals(
-            listOf("PISTOL", "SHOTGUN", "SNIPER", "SNIPER + SHOTGUN"),
+            listOf(
+                "PISTOL",
+                "PISTOL + SHOTGUN",
+                "SNIPER + SHOTGUN",
+                "ZAPPER + ELDER GUN + GOLD DIGGER",
+                "SNIPER FALLBACK (3-SLOT)"
+            ),
             deadEndHotkeyPresetCycle.map { it.label }
         )
         assertFalse(deadEndHotkeyPresetCycle.any { it.label == "RIFLE" })
@@ -23,6 +29,17 @@ class HotkeyManagerTest {
         assertTrue(combo.verticalStartIn > combo.startIn)
         assertTrue(combo.verticalPeak < combo.peak)
         assertEquals(ProfileEditorEngine.CurveShape.SOFT_START, combo.verticalShape)
+    }
+
+    @Test
+    fun lateWeaponCycleIncludesThreeSlotFallback() {
+        val utility = deadEndHotkeyPresetCycle.single { it.label == "ZAPPER + ELDER GUN + GOLD DIGGER" }
+        val fallback = deadEndHotkeyPresetCycle.single { it.label == "SNIPER FALLBACK (3-SLOT)" }
+
+        assertFalse(utility.whole == true)
+        assertEquals(true, fallback.whole)
+        assertEquals(1.00, fallback.yx)
+        assertTrue(fallback.startIn > utility.startIn)
     }
 
     @Test
