@@ -172,8 +172,18 @@ fun App(
 
         LaunchedEffect(Unit) {
             logLine("ACE VERSION -> ${System.getProperty("jpackage.app-version", "dev")}")
+            logLine(if (sessionManager.isAdministrator()) {
+                "ADMIN CHECK -> elevated"
+            } else {
+                "ADMIN CHECK -> not elevated; driver setup/Session power changes may need Administrator"
+            })
             driverPresent = withContext(Dispatchers.IO) { client.isPresent() }
             driverVersion = withContext(Dispatchers.IO) { client.version().getOrElse { "unavailable" } }
+            if (driverVersion == "unavailable") {
+                logLine("DRIVER CHECK -> unavailable; install/start the signed Raw Accel driver, then reboot if Windows requests it")
+            } else {
+                logLine("DRIVER CHECK -> $driverVersion; bridge minimum is v1.7.0")
+            }
             val scan = withContext(Dispatchers.IO) { profileManager.scan() }
             val activeDriverSettings = withContext(Dispatchers.IO) { client.read().getOrNull() }
             val activeDriverEntry = ProfileManager.matchingActiveDriverEntry(scan.entries, activeDriverSettings)

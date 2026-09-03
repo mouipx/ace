@@ -96,9 +96,15 @@ Query, Reset, and Watchdog will fail with a bridge load error instead of using
 
 ## Admin Rights
 
-Prepare Session uses `powercfg`, which needs admin rights. Apply and Reset may also
-need admin depending on your driver's device ACL. If those actions fail with
-permission errors, run IntelliJ as administrator.
+The app reports an `ADMIN CHECK` and `DRIVER CHECK` in its log on startup. Run the
+installer or app as Administrator when installing/updating the signed Raw Accel
+driver, changing power plans, or when Apply/Reset reports an access-denied error.
+The app does not replace the signed kernel driver and does not silently reboot the
+PC; complete any driver reboot requested by Windows before testing mouse behavior.
+
+The bridge requires Raw Accel driver version `v1.7.0` or newer. A successful
+`DRIVER CHECK` only confirms that the driver responds; Apply still performs a
+write/read-back comparison before reporting success.
 
 ## Troubleshooting
 

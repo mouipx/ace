@@ -7,6 +7,16 @@ class SessionManager {
 
     data class SessionReport(val powerPlan: String)
 
+    fun isAdministrator(): Boolean = runCatching {
+        val identity = java.lang.management.ManagementFactory.getRuntimeMXBean()
+        val user = System.getProperty("user.name")
+        val probe = ProcessBuilder("net", "session")
+            .redirectErrorStream(true)
+            .start()
+        probe.waitFor(5, TimeUnit.SECONDS) && probe.exitValue() == 0 &&
+            identity.name.isNotBlank() && user.isNotBlank()
+    }.getOrDefault(false)
+
     private data class CommandResult(val exitCode: Int, val output: String) {
         val succeeded: Boolean get() = exitCode == 0
     }
