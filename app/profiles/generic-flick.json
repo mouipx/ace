@@ -1,0 +1,95 @@
+{
+  "version" : "1.7.0",
+  "defaultDeviceConfig" : {
+    "disable" : true,
+    "setExtraInfo" : false,
+    "Use constant time interval based on polling rate" : false,
+    "DPI (normalizes input speed unit: counts/ms -> in/s)" : 800,
+    "Polling rate Hz (keep at 0 for automatic adjustment)" : 1000,
+    "minimumTime" : 0.0625,
+    "maximumTime" : 100.0
+  },
+  "profiles" : [ {
+    "name" : "Flick · Fast Ramp",
+    "Stretches domain for horizontal vs vertical inputs" : {
+      "x" : 1.0,
+      "y" : 1.0
+    },
+    "Stretches accel range for horizontal vs vertical inputs" : {
+      "x" : 1.0,
+      "y" : 1.0
+    },
+    "Whole or horizontal accel parameters" : {
+      "mode" : "lut",
+      "Gain / Velocity" : true,
+      "inputOffset" : 0.0,
+      "outputOffset" : 0.0,
+      "acceleration" : 0.005,
+      "decayRate" : 0.1,
+      "gamma" : 1.0,
+      "motivity" : 1.5,
+      "exponentClassic" : 2.0,
+      "scale" : 1.0,
+      "exponentPower" : 0.05,
+      "limit" : 1.55,
+      "syncSpeed" : 140.0,
+      "smooth" : 0.5,
+      "Cap / Jump" : {
+        "x" : 15.0,
+        "y" : 1.5
+      },
+      "Cap mode" : "output",
+      "data" : [ 0.0, 0.0, 15.0, 15.0, 30.0, 30.0, 34.583333333333336, 36.13538049768518, 39.166666666666664, 42.60734953703703, 43.75, 49.3896484375, 48.33333333333333, 56.45601851851852, 52.91666666666667, 63.78020109953704, 57.5, 71.3359375, 62.083333333333336, 79.09696903935186, 66.66666666666666, 87.03703703703702, 71.25, 95.1298828125, 75.83333333333334, 103.3492476851852, 80.41666666666666, 111.66887297453702, 85.0, 120.06250000000001, 89.58333333333333, 128.5038700810185, 94.16666666666667, 136.96672453703704, 98.75, 145.4248046875, 103.33333333333333, 153.85185185185185, 107.91666666666667, 162.22160734953704, 112.5, 170.5078125, 117.08333333333333, 178.68420862268516, 121.66666666666667, 186.72453703703707, 126.25, 194.6025390625, 130.83333333333331, 202.29195601851848, 135.41666666666669, 209.76652922453707, 140.0, 217.0, 2048.0, 3174.4 ]
+    },
+    "Vertical accel parameters" : {
+      "mode" : "noaccel",
+      "Gain / Velocity" : true,
+      "inputOffset" : 0.0,
+      "outputOffset" : 0.0,
+      "acceleration" : 0.005,
+      "decayRate" : 0.1,
+      "gamma" : 1.0,
+      "motivity" : 1.5,
+      "exponentClassic" : 2.0,
+      "scale" : 1.0,
+      "exponentPower" : 0.05,
+      "limit" : 1.5,
+      "syncSpeed" : 5.0,
+      "smooth" : 0.5,
+      "Cap / Jump" : {
+        "x" : 15.0,
+        "y" : 1.5
+      },
+      "Cap mode" : "output",
+      "data" : [ ]
+    },
+    "Input speed calculation parameters" : {
+      "Whole/combined accel (set false for 'by component' mode)" : true,
+      "lpNorm" : 2.0,
+      "Time in ms after which an input is weighted at half its original value." : 0.0,
+      "Time in ms after which scale is weighted at half its original value." : 0.0,
+      "Time in ms after which an output is weighted at half its original value." : 0.0
+    },
+    "Output DPI" : 800.0,
+    "Y/X output DPI ratio (vertical sens multiplier)" : 1.0,
+    "L/R output DPI ratio (left sens multiplier)" : 1.0,
+    "U/D output DPI ratio (up sens multiplier)" : 1.0,
+    "Degrees of rotation" : 0.0,
+    "Degrees of angle snapping" : 0.0,
+    "Input Speed Cap" : 0.0
+  } ],
+  "devices" : [ {
+    "name" : "Logitech USB Receiver",
+    "profile" : "Flick · Fast Ramp",
+    "id" : "HID\\VID_046D&PID_C539&MI_01&Col01",
+    "config" : {
+      "disable" : false,
+      "setExtraInfo" : false,
+      "Use constant time interval based on polling rate" : false,
+      "DPI (normalizes input speed unit: counts/ms -> in/s)" : 800,
+      "Polling rate Hz (keep at 0 for automatic adjustment)" : 1000,
+      "minimumTime" : 0.0625,
+      "maximumTime" : 100.0
+    }
+  } ]
+}

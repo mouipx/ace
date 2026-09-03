@@ -1,0 +1,97 @@
+{
+  "version" : "1.7.0",
+  "defaultDeviceConfig" : {
+    "disable" : true,
+    "setExtraInfo" : false,
+    "Use constant time interval based on polling rate" : false,
+    "DPI (normalizes input speed unit: counts/ms -> in/s)" : 1200,
+    "Polling rate Hz (keep at 0 for automatic adjustment)" : 1000,
+    "minimumTime" : 0.0625,
+    "maximumTime" : 100.0
+  },
+  "profiles" : [ {
+    "name" : "Dead End | Unified v2 | 1200 DPI",
+    "Stretches domain for horizontal vs vertical inputs" : {
+      "x" : 1.0,
+      "y" : 1.0
+    },
+    "Stretches accel range for horizontal vs vertical inputs" : {
+      "x" : 1.0,
+      "y" : 1.0
+    },
+    "Whole or horizontal accel parameters" : {
+      "mode" : "lut",
+      "Gain / Velocity" : true,
+      "inputOffset" : 0.0,
+      "outputOffset" : 0.0,
+      "acceleration" : 0.005,
+      "decayRate" : 0.1,
+      "gamma" : 1.0,
+      "motivity" : 1.5,
+      "exponentClassic" : 2.0,
+      "scale" : 1.0,
+      "exponentPower" : 0.05,
+      "limit" : 1.5,
+      "syncSpeed" : 5.0,
+      "smooth" : 0.5,
+      "Cap / Jump" : {
+        "x" : 15.0,
+        "y" : 1.5
+      },
+      "Cap mode" : "output",
+      "data" : [ 0.0, 0.0, 0.5, 0.5, 2.0, 2.0, 4.0, 4.0, 8.0, 8.0, 12.0, 12.0, 16.0, 16.0, 20.0, 20.0, 24.0, 24.0, 28.0, 28.0, 32.0, 32.0, 36.0, 36.0, 40.0, 40.0, 44.0, 44.0, 48.0, 48.0, 50.0, 50.0, 52.0, 52.08, 54.0, 54.22, 56.0, 56.42, 58.0, 58.7, 60.0, 61.08, 62.0, 63.55, 64.0, 66.11, 66.0, 68.77, 68.0, 71.54, 70.0, 74.41, 72.0, 77.4, 74.0, 80.51, 76.0, 83.72, 78.0, 87.05, 80.0, 90.48, 82.0, 94.01, 84.0, 97.64, 86.0, 101.36, 88.0, 105.16, 90.0, 109.04, 92.0, 112.98, 94.0, 116.98, 96.0, 121.03, 98.0, 125.12, 100.0, 129.24, 104.0, 133.64, 108.0, 138.02, 112.0, 142.35, 116.0, 146.61, 120.0, 150.78, 124.0, 154.84, 128.0, 158.78, 132.0, 162.58, 136.0, 166.24, 140.0, 169.75, 144.0, 173.09, 148.0, 176.27, 152.0, 179.28, 156.0, 182.13, 160.0, 184.8, 168.0, 196.56, 176.0, 208.12, 184.0, 219.42, 192.0, 230.4, 200.0, 241.0, 208.0, 251.16, 216.0, 260.82, 224.0, 269.92, 232.0, 278.4, 240.0, 286.2, 256.0, 358.4, 288.0, 403.2, 320.0, 448.0, 384.0, 537.6, 448.0, 627.2, 512.0, 716.8, 640.0, 896.0, 768.0, 1075.2, 1024.0, 1433.6, 1280.0, 1792.0, 1536.0, 2150.4, 2048.0, 2867.2 ],
+      "isLut" : true
+    },
+    "Vertical accel parameters" : {
+      "mode" : "lut",
+      "Gain / Velocity" : true,
+      "inputOffset" : 0.0,
+      "outputOffset" : 0.0,
+      "acceleration" : 0.005,
+      "decayRate" : 0.1,
+      "gamma" : 1.0,
+      "motivity" : 1.5,
+      "exponentClassic" : 2.0,
+      "scale" : 1.0,
+      "exponentPower" : 0.05,
+      "limit" : 1.5,
+      "syncSpeed" : 5.0,
+      "smooth" : 0.5,
+      "Cap / Jump" : {
+        "x" : 15.0,
+        "y" : 1.5
+      },
+      "Cap mode" : "output",
+      "data" : [ 0.0, 0.0, 0.5, 0.5, 2.0, 2.0, 4.0, 4.0, 8.0, 8.0, 12.0, 12.0, 16.0, 16.0, 20.0, 20.0, 24.0, 24.0, 28.0, 28.0, 32.0, 32.0, 36.0, 36.0, 40.0, 40.0, 44.0, 44.0, 48.0, 48.0, 50.0, 50.0, 52.0, 52.05, 54.0, 54.14, 56.0, 56.29, 58.0, 58.5, 60.0, 60.78, 62.0, 63.14, 64.0, 65.58, 66.0, 68.09, 68.0, 70.69, 70.0, 73.36, 72.0, 76.1, 74.0, 78.92, 76.0, 81.8, 78.0, 84.74, 80.0, 87.73, 82.0, 90.77, 84.0, 93.84, 86.0, 96.94, 88.0, 100.06, 90.0, 103.19, 92.0, 106.33, 94.0, 109.46, 96.0, 112.58, 98.0, 115.68, 100.0, 118.75, 104.0, 122.51, 108.0, 126.14, 112.0, 129.64, 116.0, 133.0, 120.0, 136.2, 124.0, 139.25, 128.0, 142.14, 132.0, 144.87, 136.0, 147.44, 140.0, 149.84, 144.0, 152.06, 148.0, 154.12, 152.0, 156.0, 156.0, 157.72, 160.0, 159.28, 168.0, 167.16, 176.0, 174.68, 184.0, 181.82, 192.0, 188.54, 200.0, 195.0, 208.0, 201.14, 216.0, 206.96, 224.0, 212.42, 232.0, 217.5, 240.0, 222.18, 256.0, 296.96, 288.0, 334.08, 320.0, 371.2, 384.0, 445.44, 448.0, 519.68, 512.0, 593.92, 640.0, 742.4, 768.0, 890.88, 1024.0, 1187.84, 1280.0, 1484.8, 1536.0, 1781.76, 2048.0, 2375.68 ],
+      "isLut" : true
+    },
+    "Input speed calculation parameters" : {
+      "Whole/combined accel (set false for 'by component' mode)" : true,
+      "lpNorm" : 2.0,
+      "Time in ms after which an input is weighted at half its original value." : 0.0,
+      "Time in ms after which scale is weighted at half its original value." : 0.0,
+      "Time in ms after which an output is weighted at half its original value." : 0.0
+    },
+    "Output DPI" : 1200.0,
+    "Y/X output DPI ratio (vertical sens multiplier)" : 0.9,
+    "L/R output DPI ratio (left sens multiplier)" : 1.0,
+    "U/D output DPI ratio (up sens multiplier)" : 1.0,
+    "Degrees of rotation" : 0.0,
+    "Degrees of angle snapping" : 0.0,
+    "Input Speed Cap" : 0.0
+  } ],
+  "devices" : [ {
+    "name" : "Logitech USB Receiver",
+    "profile" : "Dead End | Unified v2 | 1200 DPI",
+    "id" : "HID\\VID_046D&PID_C539&MI_01&Col01",
+    "config" : {
+      "disable" : false,
+      "setExtraInfo" : false,
+      "Use constant time interval based on polling rate" : false,
+      "DPI (normalizes input speed unit: counts/ms -> in/s)" : 1200,
+      "Polling rate Hz (keep at 0 for automatic adjustment)" : 1000,
+      "minimumTime" : 0.0625,
+      "maximumTime" : 100.0
+    }
+  } ]
+}

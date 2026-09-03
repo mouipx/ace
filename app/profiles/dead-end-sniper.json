@@ -1,0 +1,95 @@
+{
+  "version" : "1.7.0",
+  "defaultDeviceConfig" : {
+    "disable" : true,
+    "setExtraInfo" : false,
+    "Use constant time interval based on polling rate" : false,
+    "DPI (normalizes input speed unit: counts/ms -> in/s)" : 1200,
+    "Polling rate Hz (keep at 0 for automatic adjustment)" : 1000,
+    "minimumTime" : 0.0625,
+    "maximumTime" : 100.0
+  },
+  "profiles" : [ {
+    "name" : "Dead End · Sniper / Precision",
+    "Stretches domain for horizontal vs vertical inputs" : {
+      "x" : 1.0,
+      "y" : 1.0
+    },
+    "Stretches accel range for horizontal vs vertical inputs" : {
+      "x" : 1.0,
+      "y" : 1.0
+    },
+    "Whole or horizontal accel parameters" : {
+      "mode" : "lut",
+      "Gain / Velocity" : true,
+      "inputOffset" : 0.0,
+      "outputOffset" : 0.0,
+      "acceleration" : 0.005,
+      "decayRate" : 0.1,
+      "gamma" : 1.0,
+      "motivity" : 1.5,
+      "exponentClassic" : 2.0,
+      "scale" : 1.0,
+      "exponentPower" : 0.05,
+      "limit" : 1.15,
+      "syncSpeed" : 280.0,
+      "smooth" : 0.5,
+      "Cap / Jump" : {
+        "x" : 15.0,
+        "y" : 1.5
+      },
+      "Cap mode" : "output",
+      "data" : [ 0.0, 0.0, 50.0, 50.0, 100.0, 100.0, 107.5, 107.58165147569444, 115.0, 115.33940972222221, 122.5, 123.28955078124999, 130.0, 131.44444444444443, 137.5, 139.81255425347223, 145.0, 148.3984375, 152.5, 157.20274522569446, 160.0, 166.2222222222222, 167.5, 175.44970703124997, 175.0, 184.87413194444446, 182.5, 194.4805230034722, 190.0, 204.25, 197.5, 214.15977647569443, 205.0, 224.1831597222222, 212.5, 234.28955078125, 220.0, 244.4444444444444, 227.5, 254.6094292534722, 235.0, 264.7421875, 242.5, 274.79649522569446, 250.0, 284.72222222222223, 257.5, 294.46533203125, 265.0, 303.96788194444446, 272.5, 313.1680230034722, 280.0, 322.0, 2048.0, 2355.2 ]
+    },
+    "Vertical accel parameters" : {
+      "mode" : "noaccel",
+      "Gain / Velocity" : true,
+      "inputOffset" : 0.0,
+      "outputOffset" : 0.0,
+      "acceleration" : 0.005,
+      "decayRate" : 0.1,
+      "gamma" : 1.0,
+      "motivity" : 1.5,
+      "exponentClassic" : 2.0,
+      "scale" : 1.0,
+      "exponentPower" : 0.05,
+      "limit" : 1.5,
+      "syncSpeed" : 5.0,
+      "smooth" : 0.5,
+      "Cap / Jump" : {
+        "x" : 15.0,
+        "y" : 1.5
+      },
+      "Cap mode" : "output",
+      "data" : [ ]
+    },
+    "Input speed calculation parameters" : {
+      "Whole/combined accel (set false for 'by component' mode)" : true,
+      "lpNorm" : 2.0,
+      "Time in ms after which an input is weighted at half its original value." : 0.0,
+      "Time in ms after which scale is weighted at half its original value." : 0.0,
+      "Time in ms after which an output is weighted at half its original value." : 0.0
+    },
+    "Output DPI" : 1200.0,
+    "Y/X output DPI ratio (vertical sens multiplier)" : 1.0,
+    "L/R output DPI ratio (left sens multiplier)" : 1.0,
+    "U/D output DPI ratio (up sens multiplier)" : 1.0,
+    "Degrees of rotation" : 0.0,
+    "Degrees of angle snapping" : 0.0,
+    "Input Speed Cap" : 0.0
+  } ],
+  "devices" : [ {
+    "name" : "Logitech USB Receiver",
+    "profile" : "Dead End · Sniper / Precision",
+    "id" : "HID\\VID_046D&PID_C539&MI_01&Col01",
+    "config" : {
+      "disable" : false,
+      "setExtraInfo" : false,
+      "Use constant time interval based on polling rate" : false,
+      "DPI (normalizes input speed unit: counts/ms -> in/s)" : 1200,
+      "Polling rate Hz (keep at 0 for automatic adjustment)" : 1000,
+      "minimumTime" : 0.0625,
+      "maximumTime" : 100.0
+    }
+  } ]
+}

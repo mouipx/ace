@@ -1,0 +1,95 @@
+{
+  "version" : "1.7.0",
+  "defaultDeviceConfig" : {
+    "disable" : true,
+    "setExtraInfo" : false,
+    "Use constant time interval based on polling rate" : false,
+    "DPI (normalizes input speed unit: counts/ms -> in/s)" : 1200,
+    "Polling rate Hz (keep at 0 for automatic adjustment)" : 1000,
+    "minimumTime" : 0.0625,
+    "maximumTime" : 100.0
+  },
+  "profiles" : [ {
+    "name" : "Dead End - Dual Track Flick",
+    "Stretches domain for horizontal vs vertical inputs" : {
+      "x" : 1.0,
+      "y" : 1.0
+    },
+    "Stretches accel range for horizontal vs vertical inputs" : {
+      "x" : 1.0,
+      "y" : 1.0
+    },
+    "Whole or horizontal accel parameters" : {
+      "mode" : "lut",
+      "Gain / Velocity" : true,
+      "inputOffset" : 0.0,
+      "outputOffset" : 0.0,
+      "acceleration" : 0.005,
+      "decayRate" : 0.1,
+      "gamma" : 1.0,
+      "motivity" : 1.5,
+      "exponentClassic" : 2.0,
+      "scale" : 1.0,
+      "exponentPower" : 0.05,
+      "limit" : 1.45,
+      "syncSpeed" : 220.0,
+      "smooth" : 0.5,
+      "Cap / Jump" : {
+        "x" : 15.0,
+        "y" : 1.5
+      },
+      "Cap mode" : "output",
+      "data" : [ 0, 0, 22.5, 22.5, 45, 45, 52.291666666666664, 52.410820855034714, 59.583333333333329, 60.110894097222214, 66.875, 68.1680908203125, 74.166666666666657, 76.638888888888872, 81.458333333333343, 85.568372938368071, 88.75, 94.990234375, 96.041666666666671, 104.92677137586806, 103.33333333333333, 115.38888888888889, 110.625, 126.3760986328125, 117.91666666666667, 137.87651909722223, 125.20833333333333, 149.86687554253473, 132.5, 162.3125, 139.79166666666666, 175.16733127170136, 147.08333333333334, 188.37391493055557, 154.375, 201.8634033203125, 161.66666666666666, 215.55555555555554, 168.95833333333334, 229.35873752170139, 176.25, 243.169921875, 183.54166666666666, 256.87468804253467, 190.83333333333334, 270.34722222222223, 198.125, 283.4503173828125, 205.41666666666666, 296.03537326388886, 212.70833333333334, 307.9423963758681, 220, 319, 2048, 2969.6 ]
+    },
+    "Vertical accel parameters" : {
+      "mode" : "lut",
+      "Gain / Velocity" : true,
+      "inputOffset" : 0.0,
+      "outputOffset" : 0.0,
+      "acceleration" : 0.005,
+      "decayRate" : 0.1,
+      "gamma" : 1.0,
+      "motivity" : 1.5,
+      "exponentClassic" : 2.0,
+      "scale" : 1.0,
+      "exponentPower" : 0.05,
+      "limit" : 1.22,
+      "syncSpeed" : 260.0,
+      "smooth" : 0.5,
+      "Cap / Jump" : {
+        "x" : 15.0,
+        "y" : 1.5
+      },
+      "Cap mode" : "output",
+      "data" : [ 0, 0, 35, 35, 70, 70, 77.916666666666671, 77.946426504629628, 85.833333333333329, 85.964467592592584, 93.75, 94.072265625, 101.66666666666666, 102.28796296296296, 109.58333333333334, 110.62970196759261, 117.5, 119.115625, 125.41666666666667, 127.76387442129629, 133.33333333333331, 136.59259259259258, 141.25, 145.61992187500002, 149.16666666666669, 154.86400462962965, 157.08333333333331, 164.34298321759258, 165, 174.075, 172.91666666666666, 184.07819733796296, 180.83333333333334, 194.3707175925926, 188.75, 204.970703125, 196.66666666666666, 215.89629629629627, 204.58333333333334, 227.16563946759263, 212.5, 238.796875, 220.41666666666666, 250.80814525462961, 228.33333333333334, 263.21759259259255, 236.25, 276.043359375, 244.16666666666666, 289.303587962963, 252.08333333333334, 303.01642071759261, 260, 317.2, 2048, 2498.56 ]
+    },
+    "Input speed calculation parameters" : {
+      "Whole/combined accel (set false for 'by component' mode)" : false,
+      "lpNorm" : 2.0,
+      "Time in ms after which an input is weighted at half its original value." : 0.0,
+      "Time in ms after which scale is weighted at half its original value." : 0.0,
+      "Time in ms after which an output is weighted at half its original value." : 0.0
+    },
+    "Output DPI" : 1200.0,
+    "Y/X output DPI ratio (vertical sens multiplier)" : 0.92,
+    "L/R output DPI ratio (left sens multiplier)" : 1.0,
+    "U/D output DPI ratio (up sens multiplier)" : 1.0,
+    "Degrees of rotation" : 0.0,
+    "Degrees of angle snapping" : 0.0,
+    "Input Speed Cap" : 0.0
+  } ],
+  "devices" : [ {
+    "name" : "Logitech USB Receiver",
+    "profile" : "Dead End - Dual Track Flick",
+    "id" : "HID\\VID_046D&PID_C539&MI_01&Col01",
+    "config" : {
+      "disable" : false,
+      "setExtraInfo" : false,
+      "Use constant time interval based on polling rate" : false,
+      "DPI (normalizes input speed unit: counts/ms -> in/s)" : 1200,
+      "Polling rate Hz (keep at 0 for automatic adjustment)" : 1000,
+      "minimumTime" : 0.0625,
+      "maximumTime" : 100.0
+    }
+  } ]
+}

@@ -1,0 +1,13 @@
+.idea/
+.idea/**
+.gradle/
+.kotlin/
+**/build/
+**/.gradle/
+**/.kotlin/
+local.properties
+*.log
+*.tmp
+*.bak
+.DS_Store
+Thumbs.db
