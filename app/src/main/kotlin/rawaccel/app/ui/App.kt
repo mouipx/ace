@@ -54,6 +54,7 @@ import rawaccel.app.service.ProfileEditorEngine
 import rawaccel.app.service.ProfileManager
 import rawaccel.app.service.SensitivityCalculator
 import rawaccel.app.service.SessionManager
+import rawaccel.app.service.SessionController
 import rawaccel.app.service.Watchdog
 import java.io.File
 import javax.swing.JFileChooser
@@ -134,7 +135,8 @@ fun App(
     sessionManager: SessionManager,
     watchdog: Watchdog,
     hotkeyManager: HotkeyManager,
-    foregroundWatcher: ForegroundWatcher
+    foregroundWatcher: ForegroundWatcher,
+    sessionController: SessionController
 ) {
     MaterialTheme(
         colors = darkColors(
@@ -152,6 +154,7 @@ fun App(
     ) {
         var driverPresent  by remember { mutableStateOf<Boolean?>(null) }
         var driverVersion  by remember { mutableStateOf("—") }
+        var driverHealth   by remember { mutableStateOf<DriverClient.Health?>(null) }
         var profiles       by remember { mutableStateOf(listOf<ProfileManager.Entry>()) }
         var selected       by remember { mutableStateOf<ProfileManager.Entry?>(null) }
         var deviceReport   by remember { mutableStateOf<DeviceInspector.Report?>(null) }
@@ -161,13 +164,27 @@ fun App(
         var pendingRename  by remember { mutableStateOf<ProfileManager.Entry?>(null) }
         var renameText     by remember { mutableStateOf("") }
         val uiScope        = rememberCoroutineScope()
+        val sessionController = remember { SessionController() }
         val watchdogStatus by watchdog.status.collectAsState()
+        val sessionStatus by sessionController.status.collectAsState()
         val hotkeyState by hotkeyManager.state.collectAsState()
         val autoSwitchState by foregroundWatcher.state.collectAsState()
 
         fun logLine(msg: String) {
             log = (log + "[${java.text.SimpleDateFormat("HH:mm:ss").format(java.util.Date())}] $msg")
                 .takeLast(200)
+        }
+
+        fun logHealth(health: DriverClient.Health) {
+            driverHealth = health
+            val bridge = if (health.bridgeLoaded) "ready" else "missing"
+            val driver = if (health.driverPresent) "present" else "absent"
+            val state = if (health.error == null) {
+                "compat=${health.compatibility} profiles=${health.profileCount} devices=${health.deviceCount}"
+            } else {
+                "compat=${health.compatibility} error=${health.error}"
+            }
+            logLine("HEALTH → bridge=$bridge driver=$driver version=${health.driverVersion ?: "unknown"} $state")
         }
 
         LaunchedEffect(Unit) {
@@ -179,6 +196,7 @@ fun App(
             })
             driverPresent = withContext(Dispatchers.IO) { client.isPresent() }
             driverVersion = withContext(Dispatchers.IO) { client.version().getOrElse { "unavailable" } }
+            logHealth(withContext(Dispatchers.IO) { client.health() })
             if (driverVersion == "unavailable") {
                 logLine("DRIVER CHECK -> unavailable; install/start the signed Raw Accel driver, then reboot if Windows requests it")
             } else {
@@ -209,6 +227,7 @@ fun App(
             uiScope.launch {
                 driverPresent = withContext(Dispatchers.IO) { client.isPresent() }
                 driverVersion = withContext(Dispatchers.IO) { client.version().getOrElse { "unavailable" } }
+                logHealth(withContext(Dispatchers.IO) { client.health() })
                 val scan = withContext(Dispatchers.IO) { profileManager.scan() }
                 profiles = scan.entries
                 selected = selected?.let { current -> scan.entries.firstOrNull { it.file == current.file } }
@@ -218,6 +237,30 @@ fun App(
                 }
                 logLine("↻ refreshed · ${scan.entries.size} valid · ${scan.errors.size} invalid")
             }
+        }
+
+        fun exportDiagnostics() {
+            val file = chooseDiagnosticsFile() ?: return
+            val health = driverHealth
+            val operation = client.lastOperationDiagnostics()
+            file.writeText(buildString {
+                appendLine("ACE CONNECTION DIAGNOSTICS")
+                appendLine("appVersion=${System.getProperty("jpackage.app-version", "dev")}")
+                appendLine("admin=${sessionManager.isAdministrator()}")
+                appendLine("bridgeLoaded=${health?.bridgeLoaded ?: false}")
+                appendLine("driverPresent=${health?.driverPresent ?: false}")
+                appendLine("driverVersion=${health?.driverVersion ?: "unknown"}")
+                appendLine("compatibility=${health?.compatibility ?: DriverClient.Compatibility.UNAVAILABLE}")
+                appendLine("healthError=${health?.error ?: "none"}")
+                appendLine("watchdog=${watchdogStatus}")
+                appendLine("lastOperation=${operation?.operation ?: "none"}")
+                appendLine("lastTransactionId=${operation?.transactionId ?: 0}")
+                appendLine("lastDurationMs=${operation?.durationMs ?: 0}")
+                appendLine("lastSucceeded=${operation?.succeeded ?: false}")
+                appendLine("lastErrorCategory=${operation?.category ?: "none"}")
+                appendLine("lastError=${operation?.message ?: "none"}")
+            })
+            logLine("✓ DIAGNOSTICS EXPORTED → ${file.name}")
         }
 
         fun importProfile() {
@@ -315,26 +358,36 @@ fun App(
             val entry = selected ?: return
             val targets = deviceReport
             uiScope.launch {
-                val r = withContext(Dispatchers.IO) { client.apply(entry.settings) }
-                if (r.isSuccess) {
-                    logLine("✓ APPLIED + VERIFIED → ${entry.displayName}")
-                    if (targets?.defaultDevicesDisabled == true && targets.targets.none { it.connected }) {
-                        logLine("⚠ NO CONFIGURED MOUSE IS CONNECTED → profile is loaded but acceleration is disabled; open DEVICES and select USE THIS MOUSE")
+                sessionController.run("apply profile") {
+                    val portableSettings = withContext(Dispatchers.IO) {
+                        val report = DeviceInspector.inspect(entry.settings)
+                        DeviceInspector.bindToConnectedMouse(entry.settings, report)
                     }
-                    watchdog.start(entry.settings)
-                    // Also update hotkey/auto-switch baseline so clutch toggles return to this profile
-                    val profileIdx = 0
-                    hotkeyManager.updateBaseline(entry.settings, profileIdx)
-                    foregroundWatcher.setGameProfile(entry.settings)
-                } else logLine("✗ APPLY FAILED → ${r.exceptionOrNull()?.message}")
+                    val r = withContext(Dispatchers.IO) { client.apply(portableSettings) }
+                    if (r.isSuccess) {
+                        logLine("✓ APPLIED + VERIFIED → ${entry.displayName}")
+                        if (targets?.defaultDevicesDisabled == true && targets.targets.none { it.connected }) {
+                            logLine("⚠ NO CONFIGURED MOUSE IS CONNECTED → profile is loaded but acceleration is disabled; open DEVICES and select USE THIS MOUSE")
+                        }
+                        watchdog.start(portableSettings)
+                        // Also update hotkey/auto-switch baseline so clutch toggles return to this profile
+                        val profileIdx = 0
+                        hotkeyManager.resetForSession(portableSettings, profileIdx)
+                        foregroundWatcher.setGameProfile(portableSettings)
+                    } else {
+                        logLine("✗ APPLY FAILED → ${r.exceptionOrNull()?.message}")
+                    }
+                }
             }
         }
 
         fun resetDriver() {
             uiScope.launch {
-                val r = withContext(Dispatchers.IO) { client.reset() }
-                if (r.isSuccess) logLine("✓ ACCEL CLEARED") else logLine("✗ RESET FAILED → ${r.exceptionOrNull()?.message}")
-                watchdog.stop()
+                sessionController.run("reset driver") {
+                    val r = withContext(Dispatchers.IO) { client.reset() }
+                    if (r.isSuccess) logLine("✓ ACCEL CLEARED") else logLine("✗ RESET FAILED → ${r.exceptionOrNull()?.message}")
+                    watchdog.stop()
+                }
             }
         }
 
@@ -342,12 +395,14 @@ fun App(
             val entry = selected ?: run { logLine("⚠ HOTKEYS need a profile selected"); return }
             // Make sure profile is applied first
             uiScope.launch {
-                client.apply(entry.settings).onSuccess {
-                    hotkeyManager.start(entry.settings)
-                    logLine("HOTKEY CYCLE -> pistol / pistol+shotgun / sniper+shotgun / zapper+elder+gold / sniper fallback")
-                    logLine("✓ HOTKEYS ARMED → Ctrl+F1 low-sens, Ctrl+F2 high-sens, Ctrl+F3 accel on/off, Ctrl+Shift+F1 preset cycle")
-                }.onFailure {
-                    logLine("✗ HOTKEYS FAILED → ${it.message}")
+                sessionController.run("arm hotkeys") {
+                    client.applyIfChanged(entry.settings).onSuccess { changed ->
+                        hotkeyManager.start(entry.settings)
+                        logLine("HOTKEY CYCLE -> pistol / pistol+shotgun / sniper+shotgun / zapper+elder+gold / sniper fallback")
+                        logLine("✓ HOTKEYS ARMED → ${if (changed) "profile applied; " else "profile already active; "}Ctrl+F1 low-sens, Ctrl+F2 high-sens, Ctrl+F3 accel on/off, Ctrl+Shift+F1 preset cycle")
+                    }.onFailure {
+                        logLine("✗ HOTKEYS FAILED → ${it.message}")
+                    }
                 }
             }
         }
@@ -431,16 +486,22 @@ fun App(
                 return
             }
             uiScope.launch {
-                val applied = withContext(Dispatchers.IO) { client.apply(entry.settings) }
-                if (applied.isFailure) {
-                    logLine("✗ SESSION ABORTED → apply failed: ${applied.exceptionOrNull()?.message}")
-                    return@launch
-                }
+                sessionController.run("prepare session") {
+                    val r = withContext(Dispatchers.IO) { sessionManager.runSession() }
+                    logLine("⚡ SESSION → power=${r.powerPlan}")
 
-                watchdog.start(entry.settings)
-                logLine("✓ SESSION PROFILE → ${entry.displayName}")
-                val r = withContext(Dispatchers.IO) { sessionManager.runSession() }
-                logLine("⚡ SESSION → power=${r.powerPlan}")
+                    val reconciled = withContext(Dispatchers.IO) { client.applyIfChanged(entry.settings) }
+                    if (reconciled.isFailure) {
+                        logLine("✗ SESSION ABORTED → apply failed: ${reconciled.exceptionOrNull()?.message}")
+                    } else {
+                        watchdog.start(entry.settings)
+                        hotkeyManager.resetForSession(entry.settings)
+                        foregroundWatcher.setGameProfile(entry.settings)
+                        val changed = reconciled.getOrThrow()
+                        logLine("✓ SESSION PROFILE → ${entry.displayName} (${if (changed) "applied" else "already active"})")
+                    }
+
+                }
             }
         }
 
@@ -565,6 +626,7 @@ fun App(
                     statusText    = statusText,
                     statusColor   = statusColor,
                     watchdog      = watchdogStatus,
+                    sessionStatus = sessionStatus,
                     onRefresh     = ::refresh
                 )
                 Spacer(Modifier.height(8.dp))
@@ -609,7 +671,13 @@ fun App(
                             selectedProfile = selected
                         )
                         NavTab.DOCTOR    -> DoctorView(selected)
-                        NavTab.LOGS      -> LogsView(log)
+                        NavTab.LOGS      -> LogsView(
+                            log = log,
+                            health = driverHealth,
+                            operation = client.lastOperationDiagnostics(),
+                            watchdog = watchdogStatus,
+                            onExportDiagnostics = ::exportDiagnostics
+                        )
                     }
                 }
             }
@@ -639,6 +707,17 @@ private fun chooseJsonFile(open: Boolean, suggestedName: String? = null): File? 
         if (!open && suggestedName != null) selectedFile = File(suggestedName)
     }
     val result = if (open) chooser.showOpenDialog(null) else chooser.showSaveDialog(null)
+    return chooser.selectedFile.takeIf { result == JFileChooser.APPROVE_OPTION }
+}
+
+private fun chooseDiagnosticsFile(): File? {
+    val chooser = JFileChooser().apply {
+        dialogTitle = "Export connection diagnostics"
+        fileFilter = FileNameExtensionFilter("Text diagnostics (*.txt)", "txt")
+        isAcceptAllFileFilterUsed = false
+        selectedFile = File("ace-connection-diagnostics.txt")
+    }
+    val result = chooser.showSaveDialog(null)
     return chooser.selectedFile.takeIf { result == JFileChooser.APPROVE_OPTION }
 }
 
@@ -964,6 +1043,7 @@ private fun TopBar(
     statusText: String,
     statusColor: Color,
     watchdog: String,
+    sessionStatus: String,
     onRefresh: () -> Unit
 ) {
     Row(
@@ -998,6 +1078,8 @@ private fun TopBar(
 
         Spacer(Modifier.width(16.dp))
         MetricPill("WATCHDOG", watchdog.uppercase(), Cyber.violet)
+        Spacer(Modifier.width(8.dp))
+        MetricPill("OP", sessionStatus.uppercase(), Cyber.amber)
         Spacer(Modifier.width(8.dp))
         MetricPill("DRIVER", "$statusText v$driverVersion", statusColor)
         Spacer(Modifier.width(10.dp))
@@ -2609,16 +2691,43 @@ private fun FindingRow(finding: ConfigDoctor.Finding, color: Color) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
-private fun LogsView(log: List<String>) {
+private fun LogsView(
+    log: List<String>,
+    health: DriverClient.Health?,
+    operation: DriverClient.OperationDiagnostics?,
+    watchdog: String,
+    onExportDiagnostics: () -> Unit
+) {
     SectionPanel("EVENT LOG", "005", Cyber.textPrimary, Modifier.fillMaxSize()) {
-        Box(
-            Modifier.fillMaxSize()
-                .clip(shapeCard)
-                .background(Cyber.abyss)
-                .biosFrame(Cyber.borderSoft, Cyber.border, radius = 9.dp)
-                .padding(11.dp)
-        ) {
-            Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+        Column(Modifier.fillMaxSize()) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                TermText("CONNECTION DIAGNOSTICS", Cyber.textPrimary, 11, weight = FontWeight.Bold, spacing = 1.3)
+                Spacer(Modifier.weight(1f))
+                CyberBtn("EXPORT", onExportDiagnostics, Cyber.green, Modifier.width(110.dp))
+            }
+            Spacer(Modifier.height(8.dp))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                DiagnosticCell("SERVICE", if (health?.driverPresent == true) "PRESENT" else "ABSENT", Cyber.green)
+                DiagnosticCell("VERSION", health?.driverVersion ?: "UNKNOWN", Cyber.cyan)
+                DiagnosticCell("COMPAT", health?.compatibility?.name ?: "UNKNOWN", Cyber.amber)
+                DiagnosticCell("WATCHDOG", watchdog.uppercase(), Cyber.violet)
+            }
+            Spacer(Modifier.height(8.dp))
+            DiagnosticCell(
+                "LAST ${operation?.operation?.uppercase() ?: "OPERATION"}",
+                if (operation == null) "NO OPERATION" else "${if (operation.succeeded) "OK" else operation.category} · ${operation.durationMs}MS · TX ${operation.transactionId}",
+                if (operation?.succeeded == true) Cyber.green else Cyber.red,
+                Modifier.fillMaxWidth()
+            )
+            Spacer(Modifier.height(8.dp))
+            Box(
+                Modifier.fillMaxWidth().weight(1f)
+                    .clip(shapeCard)
+                    .background(Cyber.abyss)
+                    .biosFrame(Cyber.borderSoft, Cyber.border, radius = 9.dp)
+                    .padding(11.dp)
+            ) {
+                Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
                 TermText("LOG BUFFER .. LAST 200 EVENTS", Cyber.textFaint, 10, spacing = 1.2)
                 TermText("MODE  COLS=120 LINES=200", Cyber.textFaint, 10, spacing = 1.2)
                 Spacer(Modifier.height(6.dp))
@@ -2642,7 +2751,20 @@ private fun LogsView(log: List<String>) {
                         TermText(line, c, 11, modifier = Modifier.weight(1f))
                     }
                 }
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun DiagnosticCell(label: String, value: String, color: Color, cellModifier: Modifier = Modifier) {
+    Column(
+        cellModifier.clip(shapeCard).background(Cyber.panel).biosFrame(Cyber.borderSoft, color.copy(alpha = 0.7f), radius = 8.dp)
+            .padding(horizontal = 10.dp, vertical = 8.dp)
+    ) {
+        TermText(label, Cyber.textMuted, 9, weight = FontWeight.Bold, spacing = 1.1)
+        Spacer(Modifier.height(3.dp))
+        TermText(value, color, 10, weight = FontWeight.Bold, spacing = 0.7)
     }
 }

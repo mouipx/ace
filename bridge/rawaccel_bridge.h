@@ -23,6 +23,9 @@ extern "C" {
  * driver. Returns 0 on success, non-zero on failure (message in `err`). */
 RA_API int ra_apply_json(const char* json, char* err, int err_cap);
 
+/* Validate a settings JSON document without opening or writing the driver. */
+RA_API int ra_validate_json(const char* json, char* err, int err_cap);
+
 /* Read the ACTIVE driver config and serialize it back to a JSON document.
  * Returns 0 on success (JSON in `out`), non-zero on failure (message in `err`). */
 RA_API int ra_read_json(char* out, int out_cap, char* err, int err_cap);

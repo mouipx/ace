@@ -25,6 +25,17 @@ import java.awt.Point
 import java.io.File
 
 fun main() {
+    val lockFile = File(
+        System.getenv("APPDATA")?.takeIf { it.isNotBlank() } ?: System.getProperty("user.home"),
+        "Ace/ace.instance.lock"
+    )
+    val instanceGuard = InstanceGuard.acquire(lockFile)
+    if (instanceGuard == null) {
+        System.err.println("Ace is already running; refusing a second instance.")
+        return
+    }
+
+    try {
     configureBridgePath()
     application {
         val aceIcon = remember { loadAceWindowIcon() }
@@ -33,9 +44,29 @@ fun main() {
         val profileManager = remember { ProfileManager(profilesDir) }
         val sessionManager = remember { SessionManager() }
         val appScope = remember { kotlinx.coroutines.CoroutineScope(SupervisorJob() + Dispatchers.Default) }
-        val watchdog = remember { Watchdog(client, appScope) }
-        val hotkeyManager = remember { HotkeyManager(client, appScope) }
-        val foregroundWatcher = remember { ForegroundWatcher(client, appScope, profilesDir) }
+        val sessionController = remember { SessionController() }
+        val watchdog = remember { Watchdog(client, appScope, sessionController) }
+        val hotkeyManager = remember {
+            HotkeyManager(
+                client,
+                appScope,
+                onSettingsApplied = { settings ->
+                    sessionController.enqueue(appScope, "hotkey state") { watchdog.updateDesired(settings) }
+                },
+                sessionController = sessionController
+            )
+        }
+        val foregroundWatcher = remember {
+            ForegroundWatcher(
+                client,
+                appScope,
+                profilesDir,
+                onSettingsApplied = { settings ->
+                    sessionController.enqueue(appScope, "foreground state") { watchdog.updateDesired(settings) }
+                },
+                sessionController = sessionController
+            )
+        }
 
         fun closeApp() {
             hotkeyManager.releaseAll()
@@ -86,10 +117,13 @@ fun main() {
                     onClose = ::closeApp
                 )
                 Box(Modifier.weight(1f)) {
-                    App(client, profileManager, sessionManager, watchdog, hotkeyManager, foregroundWatcher)
+                    App(client, profileManager, sessionManager, watchdog, hotkeyManager, foregroundWatcher, sessionController)
                 }
             }
         }
+    }
+    } finally {
+        instanceGuard.close()
     }
 }
 

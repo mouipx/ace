@@ -1,0 +1,146 @@
+{
+  "version" : "1.7.0",
+  "defaultDeviceConfig" : {
+    "disable" : true,
+    "setExtraInfo" : false,
+    "Use constant time interval based on polling rate" : false,
+    "DPI (normalizes input speed unit: counts/ms -> in/s)" : 1200,
+    "Polling rate Hz (keep at 0 for automatic adjustment)" : 1000,
+    "minimumTime" : 0.0625,
+    "maximumTime" : 100.0
+  },
+  "profiles" : [ {
+    "name" : "Dead End | Leaderboard Target-Lock | 1200 DPI",
+    "Stretches domain for horizontal vs vertical inputs" : {
+      "x" : 1.0,
+      "y" : 1.0
+    },
+    "Stretches accel range for horizontal vs vertical inputs" : {
+      "x" : 1.0,
+      "y" : 1.0
+    },
+    "Whole or horizontal accel parameters" : {
+      "mode" : "lut",
+      "Gain / Velocity" : true,
+      "inputOffset" : 0.0,
+      "outputOffset" : 0.0,
+      "acceleration" : 0.005,
+      "decayRate" : 0.1,
+      "gamma" : 1.0,
+      "motivity" : 1.5,
+      "exponentClassic" : 2.0,
+      "scale" : 1.0,
+      "exponentPower" : 0.05,
+      "limit" : 1.5,
+      "syncSpeed" : 5.0,
+      "smooth" : 0.5,
+      "Cap / Jump" : {
+        "x" : 15.0,
+        "y" : 1.5
+      },
+      "Cap mode" : "output",
+      "data" : [
+        0.0, 0.0,
+        5.0, 5.02,
+        10.0, 10.10,
+        20.0, 20.40,
+        30.0, 31.00,
+        40.0, 42.40,
+        50.0, 54.50,
+        60.0, 67.20,
+        70.0, 80.50,
+        80.0, 94.40,
+        90.0, 108.90,
+        100.0, 123.00,
+        120.0, 151.20,
+        150.0, 195.00,
+        180.0, 240.30,
+        200.0, 270.00,
+        220.0, 297.00,
+        250.0, 337.50,
+        300.0, 405.00,
+        350.0, 472.50,
+        400.0, 540.00,
+        500.0, 675.00,
+        600.0, 810.00,
+        800.0, 1080.00,
+        1024.0, 1382.40,
+        1536.0, 2073.60,
+        2048.0, 2764.80
+      ],
+      "isLut" : true
+    },
+    "Vertical accel parameters" : {
+      "mode" : "lut",
+      "Gain / Velocity" : true,
+      "inputOffset" : 0.0,
+      "outputOffset" : 0.0,
+      "acceleration" : 0.005,
+      "decayRate" : 0.1,
+      "gamma" : 1.0,
+      "motivity" : 1.5,
+      "exponentClassic" : 2.0,
+      "scale" : 1.0,
+      "exponentPower" : 0.05,
+      "limit" : 1.5,
+      "syncSpeed" : 5.0,
+      "smooth" : 0.5,
+      "Cap / Jump" : {
+        "x" : 15.0,
+        "y" : 1.5
+      },
+      "Cap mode" : "output",
+      "data" : [
+        0.0, 0.0,
+        10.0, 10.05,
+        20.0, 20.20,
+        30.0, 30.60,
+        50.0, 52.00,
+        75.0, 79.50,
+        100.0, 108.00,
+        125.0, 137.50,
+        150.0, 168.00,
+        175.0, 199.50,
+        200.0, 230.00,
+        250.0, 287.50,
+        300.0, 345.00,
+        400.0, 460.00,
+        500.0, 575.00,
+        600.0, 690.00,
+        800.0, 920.00,
+        1024.0, 1177.60,
+        1536.0, 1766.40,
+        2048.0, 2355.20
+      ],
+      "isLut" : true
+    },
+    "Input speed calculation parameters" : {
+      "Whole/combined accel (set false for 'by component' mode)" : false,
+      "lpNorm" : 2.0,
+      "Time in ms after which an input is weighted at half its original value." : 0.0,
+      "Time in ms after which scale is weighted at half its original value." : 0.0,
+      "Time in ms after which an output is weighted at half its original value." : 0.0
+    },
+    "Output DPI" : 1200.0,
+    "Y/X output DPI ratio (vertical sens multiplier)" : 0.9,
+    "L/R output DPI ratio (left sens multiplier)" : 1.0,
+    "U/D output DPI ratio (up sens multiplier)" : 1.0,
+    "Degrees of rotation" : 0.0,
+    "Degrees of angle snapping" : 0.0,
+    "Input Speed Cap" : 0.0
+  } ],
+  "devices" : [ {
+    "name" : "Logitech USB Receiver",
+    "profile" : "Dead End | Leaderboard Target-Lock | 1200 DPI",
+    "id" : "HID\\VID_046D&PID_C539&MI_01&Col01",
+    "config" : {
+      "disable" : false,
+      "setExtraInfo" : false,
+      "Use constant time interval based on polling rate" : false,
+      "DPI (normalizes input speed unit: counts/ms -> in/s)" : 1200,
+      "Polling rate Hz (keep at 0 for automatic adjustment)" : 1000,
+      "minimumTime" : 0.0625,
+      "maximumTime" : 100.0
+    }
+  } ]
+}

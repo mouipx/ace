@@ -202,6 +202,14 @@ class ProfileManager(private val profilesDir: File) {
             }
         }
 
+        fun preferredStartupEntry(entries: List<Entry>, active: Settings?): Entry? =
+            matchingActiveDriverEntry(entries, active)
+                ?: entries.firstOrNull { it.file.name.equals("zombies_deadend.json", ignoreCase = true) }
+                ?: entries.firstOrNull()
+
+        fun isDeadEndZombiesEntry(entry: Entry): Boolean =
+            entry.file.name.equals("zombies_deadend.json", ignoreCase = true)
+
         fun defaultDir(): File {
             val dir = configuredProfilesDir()
             seedBundledProfiles(dir)

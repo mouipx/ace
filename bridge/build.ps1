@@ -19,16 +19,16 @@ if (-not (Test-Path -LiteralPath $vswhere)) {
     Fail "Visual Studio Installer was not found. Install Visual Studio Build Tools with Desktop development with C++."
 }
 
-$vsInstallDir = (& $vswhere -latest -products "*" -property installationPath 2>$null | Select-Object -First 1)
+$vsInstallDir = @(& $vswhere -products "*" -property installationPath 2>$null) |
+    ForEach-Object { $_.Trim() } |
+    Where-Object { $_ -and (Test-Path -LiteralPath (Join-Path $_ "VC\Auxiliary\Build\vcvars64.bat")) } |
+    Select-Object -First 1
 if ([string]::IsNullOrWhiteSpace($vsInstallDir)) {
-    Fail "No Visual Studio installation was found."
+    Fail "No Visual Studio installation with VC\Auxiliary\Build\vcvars64.bat was found."
 }
 Write-Host "Found Visual Studio: $vsInstallDir"
 
 $vcvars = Join-Path $vsInstallDir "VC\Auxiliary\Build\vcvars64.bat"
-if (-not (Test-Path -LiteralPath $vcvars)) {
-    Fail "vcvars64.bat not found at $vcvars"
-}
 
 $envDump = & cmd /s /c "`"$vcvars`" >nul && set"
 if ($LASTEXITCODE -ne 0) {

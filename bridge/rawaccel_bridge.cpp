@@ -364,6 +364,7 @@ static void validate_settings(
         }
     }
 
+    std::unordered_set<std::wstring> device_ids;
     for (size_t i = 0; i < devs.size(); ++i) {
         const auto& device = devs[i];
         const std::string context = "device " + std::to_string(i + 1);
@@ -373,12 +374,73 @@ static void validate_settings(
         }
         if (device.id[0] == L'\0') {
             add_error(context, "device id can not be empty");
+        } else if (!device_ids.insert(device.id).second) {
+            add_error(context, "duplicate device id");
         }
     }
 
     if (error_count) {
         throw std::runtime_error(errors.str());
     }
+}
+
+static std::vector<std::byte> prepare_settings(const char* json_text, bool check_driver_version)
+{
+    constexpr size_t max_control_buffer = 16u * 1024u * 1024u;
+    json j = json::parse(json_text ? json_text : "{}");
+
+    ra::device_config default_cfg{};
+    if (j.contains("defaultDeviceConfig")) {
+        devcfg_from_json(j["defaultDeviceConfig"], default_cfg);
+    }
+
+    std::vector<ra::modifier_settings> mods;
+    if (j.contains("profiles") && j["profiles"].is_array()) {
+        for (auto& pj : j["profiles"]) {
+            ra::modifier_settings ms{};
+            profile_from_json(pj, ms.prof);
+            ra::init_data(ms);
+            mods.push_back(ms);
+        }
+    }
+    if (mods.empty()) {
+        throw std::runtime_error("settings must contain at least one profile");
+    }
+
+    std::vector<ra::device_settings> devs;
+    if (j.contains("devices") && j["devices"].is_array()) {
+        for (auto& dj : j["devices"]) {
+            ra::device_settings ds{};
+            device_from_json(dj, ds);
+            devs.push_back(ds);
+        }
+    }
+
+    validate_settings(default_cfg, mods, devs);
+    if (check_driver_version) {
+        ra::valid_version_or_throw();
+    }
+
+    if (mods.size() > (max_control_buffer - sizeof(ra::io_base)) / sizeof(ra::modifier_settings)) {
+        throw std::runtime_error("profile data is too large");
+    }
+    const size_t mod_bytes = mods.size() * sizeof(ra::modifier_settings);
+    if (devs.size() > (max_control_buffer - sizeof(ra::io_base) - mod_bytes) / sizeof(ra::device_settings)) {
+        throw std::runtime_error("device data is too large");
+    }
+    const size_t dev_bytes = devs.size() * sizeof(ra::device_settings);
+    std::vector<std::byte> buf(sizeof(ra::io_base) + mod_bytes + dev_bytes);
+
+    auto* base = reinterpret_cast<ra::io_base*>(buf.data());
+    base->default_dev_cfg = default_cfg;
+    base->modifier_data_size = static_cast<unsigned>(mods.size());
+    base->device_data_size = static_cast<unsigned>(devs.size());
+
+    std::byte* p = buf.data() + sizeof(ra::io_base);
+    std::memcpy(p, mods.data(), mod_bytes);
+    p += mod_bytes;
+    if (dev_bytes) std::memcpy(p, devs.data(), dev_bytes);
+    return buf;
 }
 
 /* ------------------------------------------------------------------ */
@@ -388,53 +450,19 @@ static void validate_settings(
 extern "C" RA_API int ra_apply_json(const char* json_text, char* err, int err_cap)
 {
     try {
-        json j = json::parse(json_text ? json_text : "{}");
-
-        ra::device_config default_cfg{};
-        if (j.contains("defaultDeviceConfig")) {
-            devcfg_from_json(j["defaultDeviceConfig"], default_cfg);
-        }
-
-        std::vector<ra::modifier_settings> mods;
-        if (j.contains("profiles") && j["profiles"].is_array()) {
-            for (auto& pj : j["profiles"]) {
-                ra::modifier_settings ms{};
-                profile_from_json(pj, ms.prof);
-                ra::init_data(ms);   // pre-compute the accel_union data the driver executes
-                mods.push_back(ms);
-            }
-        }
-        if (mods.empty()) {
-            throw std::runtime_error("settings must contain at least one profile");
-        }
-
-        std::vector<ra::device_settings> devs;
-        if (j.contains("devices") && j["devices"].is_array()) {
-            for (auto& dj : j["devices"]) {
-                ra::device_settings ds{};
-                device_from_json(dj, ds);
-                devs.push_back(ds);
-            }
-        }
-
-        validate_settings(default_cfg, mods, devs);
-        ra::valid_version_or_throw();
-
-        size_t mod_bytes = mods.size() * sizeof(ra::modifier_settings);
-        size_t dev_bytes = devs.size() * sizeof(ra::device_settings);
-        std::vector<std::byte> buf(sizeof(ra::io_base) + mod_bytes + dev_bytes);
-
-        auto* base = reinterpret_cast<ra::io_base*>(buf.data());
-        base->default_dev_cfg   = default_cfg;
-        base->modifier_data_size = (unsigned)mods.size();
-        base->device_data_size   = (unsigned)devs.size();
-
-        std::byte* p = buf.data() + sizeof(ra::io_base);
-        std::memcpy(p, mods.data(), mod_bytes);
-        p += mod_bytes;
-        if (dev_bytes) std::memcpy(p, devs.data(), dev_bytes);
-
+        auto buf = prepare_settings(json_text, true);
         ra::write(buf.data());
+        return 0;
+    } catch (const std::exception& e) {
+        if (err && err_cap > 0) std::snprintf(err, err_cap, "%s", e.what());
+        return 1;
+    }
+}
+
+extern "C" RA_API int ra_validate_json(const char* json_text, char* err, int err_cap)
+{
+    try {
+        prepare_settings(json_text, false);
         return 0;
     } catch (const std::exception& e) {
         if (err && err_cap > 0) std::snprintf(err, err_cap, "%s", e.what());

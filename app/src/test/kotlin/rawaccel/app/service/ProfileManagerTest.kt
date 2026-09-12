@@ -64,6 +64,23 @@ class ProfileManagerTest {
     }
 
     @Test
+    fun startupSelectionPrefersDeadEndZombiesWhenDriverStateIsUnavailable() {
+        val dir = Files.createTempDirectory("ace-dead-end-startup").toFile()
+        val desktop = ProfileManager.Entry(
+            dir.resolve("generic-tracking.json"),
+            Settings(profiles = listOf(Profile(name = "desktop")))
+        )
+        val zombies = ProfileManager.Entry(
+            dir.resolve("zombies_deadend.json"),
+            Settings(profiles = listOf(Profile(name = "Dead End Zombies")))
+        )
+
+        val selected = ProfileManager.preferredStartupEntry(listOf(desktop, zombies), null)
+
+        assertEquals("zombies_deadend", selected?.displayName)
+    }
+
+    @Test
     fun scanReportsMalformedProfilesInsteadOfSilentlyDroppingThem() {
         val dir = Files.createTempDirectory("rawaccel-profile-errors").toFile()
         val manager = ProfileManager(dir)

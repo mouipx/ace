@@ -1,0 +1,83 @@
+{
+  "version": "1.7.0",
+  "defaultDeviceConfig": {
+    "disable": true,
+    "setExtraInfo": false,
+    "Use constant time interval based on polling rate": false,
+    "DPI (normalizes input speed unit: counts/ms -> in/s)": 1200,
+    "Polling rate Hz (keep at 0 for automatic adjustment)": 1000,
+    "minimumTime": 0.0625,
+    "maximumTime": 100.0
+  },
+  "profiles": [ {
+    "name": "Dead End - Dual Precision Hybrid",
+    "Stretches domain for horizontal vs vertical inputs": { "x": 1.0, "y": 1.0 },
+    "Stretches accel range for horizontal vs vertical inputs": { "x": 1.0, "y": 1.0 },
+    "Whole or horizontal accel parameters": {
+      "mode": "lut",
+      "Gain / Velocity": true,
+      "inputOffset": 0.0,
+      "outputOffset": 0.0,
+      "acceleration": 0.005,
+      "decayRate": 0.1,
+      "gamma": 1.0,
+      "motivity": 1.5,
+      "exponentClassic": 2.0,
+      "scale": 1.0,
+      "exponentPower": 0.05,
+      "limit": 1.46,
+      "syncSpeed": 230.0,
+      "smooth": 0.5,
+      "Cap / Jump": { "x": 15.0, "y": 1.5 },
+      "Cap mode": "output",
+      "data": [ 0.0, 0.0, 25.0, 25.0, 40.0, 40.0, 50.0, 50.4, 60.0, 61.2, 70.0, 72.1, 80.0, 83.2, 90.0, 94.5, 100.0, 105.8, 110.0, 117.1, 120.0, 128.5, 130.0, 139.9, 140.0, 151.3, 150.0, 162.7, 160.0, 174.1, 170.0, 185.5, 180.0, 196.9, 190.0, 208.3, 200.0, 219.7, 210.0, 231.1, 220.0, 242.5, 230.0, 335.8, 2048.0, 3000.0 ]
+    },
+    "Vertical accel parameters": {
+      "mode": "lut",
+      "Gain / Velocity": true,
+      "inputOffset": 0.0,
+      "outputOffset": 0.0,
+      "acceleration": 0.005,
+      "decayRate": 0.1,
+      "gamma": 1.0,
+      "motivity": 1.5,
+      "exponentClassic": 2.0,
+      "scale": 1.0,
+      "exponentPower": 0.05,
+      "limit": 1.18,
+      "syncSpeed": 280.0,
+      "smooth": 0.5,
+      "Cap / Jump": { "x": 15.0, "y": 1.5 },
+      "Cap mode": "output",
+      "data": [ 0.0, 0.0, 35.0, 35.0, 60.0, 60.0, 70.0, 70.2, 80.0, 80.8, 90.0, 91.4, 100.0, 102.0, 110.0, 112.6, 120.0, 123.2, 130.0, 134.0, 140.0, 144.8, 150.0, 155.6, 160.0, 167.0, 170.0, 178.4, 180.0, 189.8, 190.0, 201.2, 200.0, 212.6, 210.0, 224.0, 220.0, 235.4, 230.0, 246.8, 240.0, 258.2, 250.0, 269.6, 260.0, 280.0, 2048.0, 2500.0 ]
+    },
+    "Input speed calculation parameters": {
+      "Whole/combined accel (set false for 'by component' mode)": false,
+      "lpNorm": 2.0,
+      "Time in ms after which an input is weighted at half its original value.": 0.0,
+      "Time in ms after which scale is weighted at half its original value.": 0.0,
+      "Time in ms after which an output is weighted at half its original value.": 0.0
+    },
+    "Output DPI": 1200.0,
+    "Y/X output DPI ratio (vertical sens multiplier)": 0.92,
+    "L/R output DPI ratio (left sens multiplier)": 1.0,
+    "U/D output DPI ratio (up sens multiplier)": 1.0,
+    "Degrees of rotation": 0.0,
+    "Degrees of angle snapping": 0.0,
+    "Input Speed Cap": 0.0
+  } ],
+  "devices": [ {
+    "name": "Logitech USB Receiver",
+    "profile": "Dead End - Dual Precision Hybrid",
+    "id": "HID\\VID_046D&PID_C539&MI_01&Col01",
+    "config": {
+      "disable": false,
+      "setExtraInfo": false,
+      "Use constant time interval based on polling rate": false,
+      "DPI (normalizes input speed unit: counts/ms -> in/s)": 1200,
+      "Polling rate Hz (keep at 0 for automatic adjustment)": 1000,
+      "minimumTime": 0.0625,
+      "maximumTime": 100.0
+    }
+  } ]
+}

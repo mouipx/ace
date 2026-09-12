@@ -9,13 +9,7 @@ class HotkeyManagerTest {
     @Test
     fun deadEndHotkeyCycleMatchesPistolShotgunSniperLoadout() {
         assertEquals(
-            listOf(
-                "PISTOL",
-                "PISTOL + SHOTGUN",
-                "SNIPER + SHOTGUN",
-                "ZAPPER + ELDER GUN + GOLD DIGGER",
-                "SNIPER FALLBACK (3-SLOT)"
-            ),
+            deadEndWeaponStages,
             deadEndHotkeyPresetCycle.map { it.label }
         )
         assertFalse(deadEndHotkeyPresetCycle.any { it.label == "RIFLE" })

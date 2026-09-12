@@ -11,3 +11,9 @@ local.properties
 *.bak
 .DS_Store
 Thumbs.db
+
+# Local installers, recovery material, and driver-test artifacts
+WDK-download.exe
+WindowsSDK-*.exe
+test-artifacts/
+codex-recovery/

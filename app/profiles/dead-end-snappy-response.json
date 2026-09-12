@@ -1,0 +1,83 @@
+{
+  "version": "1.7.0",
+  "defaultDeviceConfig": {
+    "disable": true,
+    "setExtraInfo": false,
+    "Use constant time interval based on polling rate": false,
+    "DPI (normalizes input speed unit: counts/ms -> in/s)": 1200,
+    "Polling rate Hz (keep at 0 for automatic adjustment)": 1000,
+    "minimumTime": 0.0625,
+    "maximumTime": 100.0
+  },
+  "profiles": [ {
+    "name": "Dead End - Snappy Response (Experimental)",
+    "Stretches domain for horizontal vs vertical inputs": { "x": 1.0, "y": 1.0 },
+    "Stretches accel range for horizontal vs vertical inputs": { "x": 1.0, "y": 1.0 },
+    "Whole or horizontal accel parameters": {
+      "mode": "lut",
+      "Gain / Velocity": true,
+      "inputOffset": 0.0,
+      "outputOffset": 0.0,
+      "acceleration": 0.005,
+      "decayRate": 0.1,
+      "gamma": 1.0,
+      "motivity": 1.5,
+      "exponentClassic": 2.0,
+      "scale": 1.0,
+      "exponentPower": 0.05,
+      "limit": 1.5,
+      "syncSpeed": 5.0,
+      "smooth": 0.5,
+      "Cap / Jump": { "x": 15.0, "y": 1.5 },
+      "Cap mode": "output",
+      "data": [ 0.0, 0.0, 25.0, 25.0, 50.0, 50.0, 60.0, 61.2, 80.0, 90.4, 100.0, 128.0, 120.0, 146.4, 140.0, 169.4, 160.0, 185.6, 180.0, 214.2, 200.0, 242.0, 220.0, 268.4, 240.0, 285.6, 256.0, 358.4, 320.0, 448.0, 512.0, 716.8, 1024.0, 1433.6, 2048.0, 3072.0 ]
+    },
+    "Vertical accel parameters": {
+      "mode": "noaccel",
+      "Gain / Velocity": true,
+      "inputOffset": 0.0,
+      "outputOffset": 0.0,
+      "acceleration": 0.005,
+      "decayRate": 0.1,
+      "gamma": 1.0,
+      "motivity": 1.5,
+      "exponentClassic": 2.0,
+      "scale": 1.0,
+      "exponentPower": 0.05,
+      "limit": 1.5,
+      "syncSpeed": 5.0,
+      "smooth": 0.5,
+      "Cap / Jump": { "x": 15.0, "y": 1.5 },
+      "Cap mode": "output",
+      "data": []
+    },
+    "Input speed calculation parameters": {
+      "Whole/combined accel (set false for 'by component' mode)": true,
+      "lpNorm": 2.0,
+      "Time in ms after which an input is weighted at half its original value.": 0.0,
+      "Time in ms after which scale is weighted at half its original value.": 0.0,
+      "Time in ms after which an output is weighted at half its original value.": 0.0
+    },
+    "Output DPI": 1200.0,
+    "Y/X output DPI ratio (vertical sens multiplier)": 0.90,
+    "L/R output DPI ratio (left sens multiplier)": 1.0,
+    "U/D output DPI ratio (up sens multiplier)": 1.0,
+    "Degrees of rotation": 0.0,
+    "Degrees of angle snapping": 0.0,
+    "Input Speed Cap": 0.0
+  } ],
+  "devices": [ {
+    "name": "Logitech USB Receiver",
+    "profile": "Dead End - Snappy Response (Experimental)",
+    "id": "HID\\VID_046D&PID_C539&MI_01&Col01",
+    "config": {
+      "disable": false,
+      "setExtraInfo": false,
+      "Use constant time interval based on polling rate": false,
+      "DPI (normalizes input speed unit: counts/ms -> in/s)": 1200,
+      "Polling rate Hz (keep at 0 for automatic adjustment)": 1000,
+      "minimumTime": 0.0625,
+      "maximumTime": 100.0
+    }
+  } ]
+}

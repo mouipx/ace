@@ -18,12 +18,14 @@ import rawaccel.app.model.Settings
  */
 class Watchdog(
     private val client: DriverClient,
-    private val scope: CoroutineScope
+    private val scope: CoroutineScope,
+    private val sessionController: SessionController? = null
 ) {
     private val _status = MutableStateFlow("idle")
     val status: StateFlow<String> = _status
 
     private var job: Job? = null
+    @Volatile private var desiredSettings: Settings? = null
 
     fun start(current: Settings) {
         stop()
@@ -32,24 +34,43 @@ class Watchdog(
             return
         }
 
+    desiredSettings = current
         _status.value = "watching"
         job = scope.launch {
             var reapplyCount = 0
             while (isActive) {
-                delay(15_000)
-
-                runCatching {
-                    val active = client.read().getOrThrow()
-                    val difference = DriverStateComparator.firstDifference(current, active)
-                    if (difference != null) {
-                        reapplyCount++
-                        _status.value = "drift #$reapplyCount - re-applying"
-                        client.apply(current).getOrThrow()
-                        _status.value = "watching (re-applied #$reapplyCount)"
-                    } else {
-                        _status.value = "watching (ok)"
+                var disconnected = false
+                try {
+                    val desired = desiredSettings ?: continue
+                    val check: suspend () -> Unit = {
+                        val active = client.read().getOrThrow()
+                        val difference = DriverStateComparator.firstDifference(desired, active)
+                        if (difference != null) {
+                            reapplyCount++
+                            _status.value = "drift #$reapplyCount - re-applying"
+                            client.apply(desired).getOrThrow()
+                            _status.value = "watching (re-applied #$reapplyCount)"
+                        } else {
+                            _status.value = "watching (ok)"
+                        }
                     }
-                }.onFailure { _status.value = "watchdog error: ${it.message}" }
+                    if (sessionController != null) {
+                        sessionController.run("watchdog check", check)
+                    } else {
+                        check()
+                    }
+                } catch (error: Throwable) {
+                    val diagnostic = client.lastOperationDiagnostics()
+                    if (diagnostic?.category == DriverClient.ErrorCategory.DRIVER_MISSING) {
+                        _status.value = "stopped: driver disconnected"
+                        disconnected = true
+                    } else {
+                        _status.value = "watchdog error: ${error.message}"
+                    }
+                }
+
+                if (disconnected) break
+                delay(15_000)
             }
         }
     }
@@ -57,7 +78,12 @@ class Watchdog(
     fun stop() {
         job?.cancel()
         job = null
+        desiredSettings = null
         _status.value = "stopped"
+    }
+
+    fun updateDesired(settings: Settings) {
+        if (job?.isActive == true) desiredSettings = settings
     }
 
 }

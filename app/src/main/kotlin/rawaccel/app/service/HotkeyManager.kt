@@ -3,6 +3,7 @@ package rawaccel.app.service
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.runBlocking
 import rawaccel.app.driver.DriverClient
 import rawaccel.app.model.AccelParams
 import rawaccel.app.model.Profile
@@ -21,6 +22,13 @@ internal data class HotkeyPresetDef(
     val verticalEndIn: Double = endIn,
     val verticalPeak: Double = peak,
     val verticalShape: ProfileEditorEngine.CurveShape = shape
+)
+internal val deadEndWeaponStages: List<String> = listOf(
+    "PISTOL",
+    "PISTOL + SHOTGUN",
+    "SNIPER + SHOTGUN",
+    "ZAPPER + ELDER GUN + GOLD DIGGER",
+    "SNIPER FALLBACK (3-SLOT)"
 )
 
 internal val deadEndHotkeyPresetCycle: List<HotkeyPresetDef> = listOf(
@@ -77,7 +85,9 @@ internal val deadEndHotkeyPresetCycle: List<HotkeyPresetDef> = listOf(
  */
 class HotkeyManager(
     private val client: DriverClient,
-    @Suppress("unused") private val scope: CoroutineScope
+    @Suppress("unused") private val scope: CoroutineScope,
+    private val onSettingsApplied: (Settings) -> Unit = {},
+    private val sessionController: SessionController? = null
 ) {
     enum class Action {
         CLUTCH_LOW,
@@ -178,6 +188,20 @@ class HotkeyManager(
         }
     }
 
+    /** Establishes a fresh session baseline and clears any transient hotkey mode. */
+    fun resetForSession(settings: Settings, profileIndex: Int = 0) {
+        currentSettings = settings
+        baselineSettings = settings
+        baselineProfile = settings.profiles.getOrNull(profileIndex)
+        currentProfileIndex = profileIndex
+        presetCycleIndex = -1
+        _state.value = if (pumpThread?.isAlive == true) {
+            HotkeyState(lastAction = "HOTKEYS ARMED")
+        } else {
+            HotkeyState()
+        }
+    }
+
     private fun runMessagePump() {
         val w = WinAccess()
         win = w
@@ -252,7 +276,8 @@ class HotkeyManager(
             accelY = scaleAccel(baseProfile.accelY, multiplier)
         )
         val newSettings = replaceProfile(base, newProfile, currentProfileIndex)
-        client.apply(newSettings).onSuccess {
+        applySettings("hotkey clutch", newSettings).onSuccess {
+            onSettingsApplied(newSettings)
             _state.value = s.copy(
                 clutchLowActive = low && wantActive,
                 clutchHighActive = high && wantActive,
@@ -283,7 +308,8 @@ class HotkeyManager(
             )
         }
         val newSettings = replaceProfile(base, newProfile, currentProfileIndex)
-        client.apply(newSettings).onSuccess {
+        applySettings("hotkey toggle", newSettings).onSuccess {
+            onSettingsApplied(newSettings)
             _state.value = s.copy(
                 accelEnabled = wantOn,
                 clutchLowActive = false,
@@ -312,7 +338,8 @@ class HotkeyManager(
             yxRatio = def.yx
         )
         val newSettings = replaceProfile(base, newProfile, currentProfileIndex)
-        client.apply(newSettings).onSuccess {
+        applySettings("hotkey preset", newSettings).onSuccess {
+            onSettingsApplied(newSettings)
             baselineProfile = newProfile
             _state.value = s.copy(
                 clutchLowActive = false,
@@ -359,9 +386,16 @@ class HotkeyManager(
     /** Re-apply the stored baseline (called by the app on close/disarm). */
     fun releaseAll() {
         val base = baselineSettings ?: return
-        client.apply(base)
+        applySettings("restore baseline", base).onSuccess { onSettingsApplied(base) }
         _state.value = HotkeyState(lastAction = "RESTORED BASELINE")
     }
+
+    private fun applySettings(label: String, settings: Settings): Result<Unit> =
+        if (sessionController == null) {
+            client.apply(settings)
+        } else {
+            runBlocking { sessionController.run(label) { client.apply(settings) } }
+        }
 
     fun stop() {
         val t = pumpThread

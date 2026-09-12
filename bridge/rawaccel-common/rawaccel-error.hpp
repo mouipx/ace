@@ -15,8 +15,18 @@ namespace rawaccel {
 
 	class install_error : public io_error {
 	public:
-		install_error() :
-			io_error("Raw Accel is not installed, run installer.exe") {}
+		explicit install_error(DWORD code = GetLastError()) :
+			io_error(build_msg(code, "Raw Accel device could not be opened")) {}
+
+		static std::string build_msg(DWORD code, const char* msg)
+		{
+			std::string ret =
+				std::system_error(code, std::system_category(), msg).what();
+			ret += " (";
+			ret += std::to_string(code);
+			ret += ")";
+			return ret;
+		}
 	};
 
 	class sys_error : public io_error {

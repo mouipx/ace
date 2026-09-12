@@ -3,6 +3,7 @@ package rawaccel.app.service
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import java.nio.file.Files
 
 class SessionManagerTest {
     @Test
@@ -21,5 +22,16 @@ class SessionManagerTest {
             manager.powerPlanGuid(output, "Bitsum Highest Performance")
         )
         assertNull(manager.powerPlanGuid(output, "Missing Plan"))
+    }
+
+    @Test
+    fun instanceGuardAllowsOnlyOneOwner() {
+        val lockFile = Files.createTempDirectory("ace-instance").resolve("ace.lock").toFile()
+        val first = InstanceGuard.acquire(lockFile)
+        val second = InstanceGuard.acquire(lockFile)
+
+        assertEquals(true, first != null)
+        assertNull(second)
+        first?.close()
     }
 }

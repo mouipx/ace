@@ -28,7 +28,9 @@ import java.io.File
 class ForegroundWatcher(
     private val client: DriverClient,
     private val scope: CoroutineScope,
-    @Suppress("unused") private val profilesDir: File
+    @Suppress("unused") private val profilesDir: File,
+    private val onSettingsApplied: (Settings) -> Unit = {},
+    private val sessionController: SessionController? = null
 ) {
     data class GameRule(
         val exeName: String,
@@ -97,11 +99,12 @@ class ForegroundWatcher(
         gameSettings = settings
     }
 
-    private fun onForegroundChanged(exe: String) {
+    private suspend fun onForegroundChanged(exe: String) {
         val rule = knownGames.firstOrNull { it.exeName.equals(exe, ignoreCase = true) }
         val current = _state.value
         if (rule != null && gameSettings != null) {
-            client.apply(gameSettings!!).onSuccess {
+            applySettings("foreground game", gameSettings!!).onSuccess {
+                onSettingsApplied(gameSettings!!)
                 _state.value = current.copy(
                     running = true,
                     activeGame = rule.displayName,
@@ -113,7 +116,8 @@ class ForegroundWatcher(
                 _state.value = current.copy(activeExe = exe, error = "Switch failed: ${it.message}")
             }
         } else if (rule == null && baselineSettings != null) {
-            client.apply(baselineSettings!!).onSuccess {
+            applySettings("foreground desktop", baselineSettings!!).onSuccess {
+                onSettingsApplied(baselineSettings!!)
                 _state.value = current.copy(
                     running = true,
                     activeGame = null,
@@ -126,6 +130,13 @@ class ForegroundWatcher(
             _state.value = current.copy(activeExe = exe, activeGame = rule?.displayName)
         }
     }
+
+    private suspend fun applySettings(label: String, settings: Settings): Result<Unit> =
+        if (sessionController == null) {
+            client.apply(settings)
+        } else {
+            sessionController.run(label) { client.apply(settings) }
+        }
 
     /**
      * Read the .exe filename of the current foreground window's owning process.

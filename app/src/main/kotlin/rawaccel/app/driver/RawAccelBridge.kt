@@ -27,6 +27,9 @@ interface RawAccelBridge : Library {
     /** Apply a UTF-8 encoded settings.json document. 0 = ok. */
     fun ra_apply_json(json: ByteArray, err: ByteArray, errCap: Int): Int
 
+    /** Validate settings without opening or writing the driver. 0 = ok. */
+    fun ra_validate_json(json: ByteArray, err: ByteArray, errCap: Int): Int
+
     /** Read the active driver config back into a UTF-8 buffer. 0 = ok. */
     fun ra_read_json(out: ByteArray, outCap: Int, err: ByteArray, errCap: Int): Int
 

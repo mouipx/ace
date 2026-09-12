@@ -23,6 +23,24 @@ object DeviceInspector {
         val error: String? = null
     )
 
+    /** Rebinds a portable profile without changing its curve or sensitivity. */
+    fun bindToConnectedMouse(settings: Settings, report: Report): Settings {
+        val connected = report.connectedMice.firstOrNull() ?: return settings
+        val targetId = rawAccelDeviceId(connected.instanceId)
+        if (targetId.isBlank()) return settings
+
+        val existing = settings.devices.firstOrNull()
+        val target = (existing ?: DeviceSettings()).copy(
+            name = targetName(connected),
+            id = targetId,
+            config = existing?.config ?: settings.defaultDeviceConfig
+        )
+        return settings.copy(
+            defaultDeviceConfig = settings.defaultDeviceConfig.copy(disable = true),
+            devices = listOf(target)
+        )
+    }
+
     fun inspect(settings: Settings): Report {
         val miceResult = runCatching { connectedMice() }
         val mice = miceResult.getOrDefault(emptyList())

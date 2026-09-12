@@ -5,6 +5,57 @@ driver. The signed `rawaccel.sys` driver stays as the engine, and this app owns
 the desktop UI, profile manager, curve preview, session tools, watchdog, and
 native bridge.
 
+This project is also called **Ace** in the packaged application. It is a
+user-mode desktop application and native bridge around the official Raw Accel
+driver; it is not a replacement kernel driver.
+
+## Start Here
+
+Read these files in order:
+
+1. `ARCHITECTURE.md` — why the app, bridge, and driver are separated.
+2. `TESTING.md` — local build and validation commands.
+3. `AUDIT.md` — known risks, safeguards, and verification history.
+4. `bridge/CAPABILITIES.md` — the proposed capability protocol, currently dormant.
+
+The main runtime path is:
+
+```text
+Compose UI -> service layer -> DriverClient -> JNA -> rawaccel_bridge.dll
+  -> Windows DeviceIoControl -> official signed rawaccel.sys
+```
+
+## Core Functions
+
+| Area | Responsibility | Starting point |
+|---|---|---|
+| UI | Dashboard, editor, curve preview, devices, session controls | `app/src/main/kotlin/rawaccel/app/ui/App.kt` |
+| Driver client | Serialized Apply, Query, Reset, version and health checks | `app/src/main/kotlin/rawaccel/app/driver/DriverClient.kt` |
+| Native bridge | ABI-correct JSON-to-Raw-Accel marshalling and IOCTL calls | `bridge/rawaccel_bridge.cpp` |
+| Profiles | Load, validate, import, export, backup, and recover JSON profiles | `app/src/main/kotlin/rawaccel/app/service/ProfileManager.kt` |
+| Device matching | Detect connected mice and bind profiles to hardware IDs | `app/src/main/kotlin/rawaccel/app/service/DeviceInspector.kt` |
+| Auto-switch | Apply a game profile when Minecraft or another known game is focused | `app/src/main/kotlin/rawaccel/app/service/ForegroundWatcher.kt` |
+| Reliability | Read-back verification, drift detection, watchdog recovery | `app/src/main/kotlin/rawaccel/app/service/Watchdog.kt` |
+| Validation | Profile, LUT, device, version, and numeric safety checks | `app/src/main/kotlin/rawaccel/app/service/ConfigDoctor.kt` |
+
+## Safety Boundary
+
+The official signed Raw Accel driver is the production dependency. Do not
+replace `rawaccel.sys` on a physical machine with an experimental build. Kernel
+driver testing belongs in a disposable VM with a known-good snapshot. Changes
+to the Kotlin app, bridge, profiles, and offline validation can be tested on the
+normal development machine.
+
+The repository intentionally excludes local SDK downloads, private recovery
+records, driver backups, and test artifacts. Build outputs are also ignored.
+
+## Helping With The Project
+
+Good first tasks are improvements to profile validation, device matching,
+read-back diagnostics, tests, and documentation. Before changing the driver
+protocol, read `ARCHITECTURE.md` and confirm the matching kernel-driver source
+and a rollback-capable test environment exist.
+
 ## Project Layout
 
 | path | what it is |
