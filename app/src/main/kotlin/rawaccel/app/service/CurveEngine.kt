@@ -110,19 +110,45 @@ object CurveEngine {
         )
     }
 
-    /** Scans the LUT and returns (inputSpeed, gain) at every dip in sensitivity. */
+    /**
+     * Scans the LUT and returns (inputSpeed, gain) at every dip in sensitivity.
+     *
+     * A curve that is monotonic in one direction is fine: an accelerator that
+     * only rises, or a target-lock that only decays, is both an intended shape.
+     * A "dip" only exists when the curve mixes directions (rises then falls, or
+     * falls then rises) — that is the "feels off" bug. In the mixed case the
+     * downward steps are reported.
+     */
     fun monotonicityIssues(accel: AccelParams): List<Pair<Double, Double>> {
         if (!accel.isLut || accel.data.size < 4) return emptyList()
         val maxIn = accel.data[accel.data.size - 2]
-        val issues = ArrayList<Pair<Double, Double>>()
-        var prev = Double.NaN
+        val samples = ArrayList<Pair<Double, Double>>()
         var v = 0.0
         val step = maxIn / 600.0
         while (v <= maxIn) {
-            val g = gainAt(accel, v)
-            if (!prev.isNaN() && g < prev - 1e-6) issues.add(v to g)
-            prev = g
+            samples.add(v to gainAt(accel, v))
             v += step
+        }
+
+        // The v=0 sample is a boundary artifact (lookup gain is 0 at zero
+        // input), not curve behaviour — direction analysis starts at v>0.
+        val curveSamples = samples.filter { it.first > 0.0 }
+        var sawIncrease = false
+        var sawDecrease = false
+        for (index in 1 until curveSamples.size) {
+            val prevG = curveSamples[index - 1].second
+            val g = curveSamples[index].second
+            if (g > prevG + 1e-6) sawIncrease = true
+            if (g < prevG - 1e-6) sawDecrease = true
+        }
+        val monotonic = !(sawIncrease && sawDecrease)
+        if (monotonic) return emptyList()
+
+        val issues = ArrayList<Pair<Double, Double>>()
+        for (index in 1 until samples.size) {
+            val (speed, g) = samples[index]
+            val prevG = samples[index - 1].second
+            if (g < prevG - 1e-6) issues.add(speed to g)
         }
         return issues
     }

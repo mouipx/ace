@@ -17,6 +17,14 @@ import kotlin.math.max
 object DriverStateComparator {
     private val mapper = jacksonObjectMapper()
 
+    /**
+     * App-only profile fields that are not part of the Raw Accel driver
+     * schema. The driver read-back never contains them, so comparing them
+     * would report permanent false drift and make the watchdog re-apply in a
+     * loop. Skip them on both sides.
+     */
+    private val appOnlyFields = setOf("Preset cycle")
+
     data class Difference(
         val path: String,
         val expected: String,
@@ -51,8 +59,10 @@ object DriverStateComparator {
         }
 
         if (expected.isObject) {
-            val expectedNames = expected.fieldNames().asSequence().toSet()
-            val actualNames = actual.fieldNames().asSequence().toSet()
+            val expectedNames = expected.fieldNames().asSequence()
+                .filter { it !in appOnlyFields }.toSet()
+            val actualNames = actual.fieldNames().asSequence()
+                .filter { it !in appOnlyFields }.toSet()
             if (expectedNames != actualNames) {
                 return Difference(path, expectedNames.sorted().toString(), actualNames.sorted().toString())
             }

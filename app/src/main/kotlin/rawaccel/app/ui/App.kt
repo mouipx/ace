@@ -398,7 +398,11 @@ fun App(
                 sessionController.run("arm hotkeys") {
                     client.applyIfChanged(entry.settings).onSuccess { changed ->
                         hotkeyManager.start(entry.settings)
-                        logLine("HOTKEY CYCLE -> pistol / pistol+shotgun / sniper+shotgun / zapper+elder+gold / sniper fallback")
+                        val cycleLabels = entry.settings.profiles.firstOrNull()?.presetCycle
+                            ?.takeIf { it.isNotEmpty() }
+                            ?.joinToString(" / ") { it.label.lowercase() }
+                            ?: "pistol / pistol+shotgun / sniper+shotgun / zapper+elder+gold / sniper fallback"
+                        logLine("HOTKEY CYCLE -> $cycleLabels")
                         logLine("✓ HOTKEYS ARMED → ${if (changed) "profile applied; " else "profile already active; "}Ctrl+F1 low-sens, Ctrl+F2 high-sens, Ctrl+F3 accel on/off, Ctrl+Shift+F1 preset cycle")
                     }.onFailure {
                         logLine("✗ HOTKEYS FAILED → ${it.message}")
@@ -2416,7 +2420,13 @@ private fun SessionView(
                     EchoLine("  CTRL+F1  .. CLUTCH LOW (75% SENS)", Cyber.textDim, 9)
                     EchoLine("  CTRL+F2  .. CLUTCH HIGH (135% SENS)", Cyber.textDim, 9)
                     EchoLine("  CTRL+F3  .. TOGGLE ACCEL ON/OFF", Cyber.textDim, 9)
-                    EchoLine("  CTRL+SHIFT+F1 .. PISTOL / SHOTGUN / SNIPER / SNIPER+SHOTGUN", Cyber.textDim, 9)
+                    val presetLabels = hotkeyState.presetLabels
+                    val presetSummary = if (presetLabels.size <= 3) {
+                        presetLabels.joinToString(" / ")
+                    } else {
+                        presetLabels.take(3).joinToString(" / ") + " / +" + (presetLabels.size - 3) + " MORE"
+                    }
+                    EchoLine("  CTRL+SHIFT+F1 .. CYCLE ${presetLabels.size} WEAPON STAGES: ${presetSummary.uppercase()}", Cyber.textDim, 9)
                     Spacer(Modifier.height(8.dp))
 
                     if (hotkeyState.error != null) {

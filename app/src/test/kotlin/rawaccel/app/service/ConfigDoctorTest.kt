@@ -83,6 +83,29 @@ class ConfigDoctorTest {
     }
 
     @Test
+    fun `pure target lock lut is not warned`() {
+        // A sniper target-lock vertical (high low-speed gain decaying to a
+        // lower ceiling) is an intended shape, not a dip.
+        val lockAccel = AccelParams(
+            mode = "lut",
+            gain = true,
+            data = ProfileEditorEngine.flatten(
+                ProfileEditorEngine.generateTargetLock(3.0, 45.0, 2.2, 1.5)
+            )
+        )
+        val s = goodSettings().copy(
+            profiles = goodSettings().profiles.map {
+                it.copy(accelY = lockAccel, accelX = lockAccel, speed = SpeedParams(whole = false))
+            }
+        )
+        val r = ConfigDoctor.diagnose(s)
+        assertTrue(r.warnings.none { it.code == "LUT_DIP" },
+            "pure target lock must not be flagged as a dip, got ${r.warnings.map { it.code }}")
+        assertTrue(r.findings.any { it.code == "LUT_MONO" },
+            "target lock should pass the monotonic check")
+    }
+
+    @Test
     fun `dead vertical lut warned in whole mode`() {
         val accel = AccelParams(
             mode = "lut",

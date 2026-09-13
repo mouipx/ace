@@ -3,6 +3,7 @@ package rawaccel.app.service
 import rawaccel.app.model.AccelParams
 import rawaccel.app.model.DeviceConfig
 import rawaccel.app.model.DeviceSettings
+import rawaccel.app.model.PresetStage
 import rawaccel.app.model.Profile
 import rawaccel.app.model.Settings
 import kotlin.test.Test
@@ -58,6 +59,25 @@ class DriverStateComparatorTest {
         assertTrue(rebound.devices.single().id == "HID\\VID_046D&PID_C539&MI_01&Col01")
         assertTrue(rebound.devices.single().config == original.devices.single().config)
         assertTrue(rebound.profiles == original.profiles)
+    }
+
+    @Test
+    fun appOnlyPresetCycleFieldIsIgnoredSoWatchdogDoesNotLoop() {
+        // The in-memory profile carries an app-only "Preset cycle" section;
+        // the driver read-back never does. The comparator must treat the two
+        // as equivalent, or the watchdog re-applies forever.
+        val withCycle = settingsWithData(listOf(50.0, 50.0, 100.0, 125.0)).copy(
+            profiles = listOf(
+                settingsWithData(listOf(50.0, 50.0, 100.0, 125.0)).profiles.single().copy(
+                    presetCycle = listOf(
+                        PresetStage(label = "SNIPER + SHOTGUN", startIn = 5.0, endIn = 70.0, peak = 2.7)
+                    )
+                )
+            )
+        )
+        val driverReadback = settingsWithData(listOf(50.0, 50.0, 100.0, 125.0))
+
+        assertTrue(DriverStateComparator.equivalent(withCycle, driverReadback))
     }
 
     private fun settingsWithData(data: List<Double>) = Settings(

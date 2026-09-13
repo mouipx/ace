@@ -14,6 +14,7 @@ internal data class HotkeyPresetDef(
     val label: String,
     val startIn: Double,
     val endIn: Double,
+    /** Accelerator: max gain. TARGET_LOCK: low-speed floor gain. */
     val peak: Double,
     val yx: Double,
     val whole: Boolean? = null,
@@ -21,7 +22,11 @@ internal data class HotkeyPresetDef(
     val verticalStartIn: Double = startIn,
     val verticalEndIn: Double = endIn,
     val verticalPeak: Double = peak,
-    val verticalShape: ProfileEditorEngine.CurveShape = shape
+    val verticalShape: ProfileEditorEngine.CurveShape = shape,
+    /** TARGET_LOCK only: high-speed ceiling gain (ignored otherwise). */
+    val ceilGain: Double = 0.0,
+    /** TARGET_LOCK only, vertical: high-speed ceiling gain (ignored otherwise). */
+    val verticalCeil: Double = 0.0
 )
 internal val deadEndWeaponStages: List<String> = listOf(
     "PISTOL",
@@ -31,39 +36,108 @@ internal val deadEndWeaponStages: List<String> = listOf(
     "SNIPER FALLBACK (3-SLOT)"
 )
 
+/**
+ * Built-in Dead End hotkey preset cycle. Every stage is tuned for the actual
+ * weapon's role:
+ *  - Sniper stages carry a TARGET_LOCK vertical (high low-speed gain = the
+ *    crosshair locks onto the head with a micro nudge; low high-speed ceiling
+ *    = pitch stays controlled). This is the headshot axis.
+ *  - Horizontal is a true accelerator (accurate floor -> strong ceiling) so
+ *    fast turns / 180s / target-switches carry much farther.
+ *  - Ramps start at low speeds so the curve is actually doing work in normal
+ *    Dead End movement, not only at extreme flick speeds.
+ *
+ * A profile can override this whole cycle with its own "Preset cycle" JSON
+ * section (see PresetStage) — see resolveCycle().
+ */
 internal val deadEndHotkeyPresetCycle: List<HotkeyPresetDef> = listOf(
-    HotkeyPresetDef("PISTOL", 35.0, 125.0, 1.45, 0.95, whole = true, shape = ProfileEditorEngine.CurveShape.FAST_RAMP),
-    HotkeyPresetDef("PISTOL + SHOTGUN", 55.0, 180.0, 1.35, 0.90, whole = false,
+    HotkeyPresetDef(
+        "PISTOL", 8.0, 60.0, 1.9, 0.95, whole = false,
         shape = ProfileEditorEngine.CurveShape.SMOOTH,
-        verticalStartIn = 85.0, verticalEndIn = 220.0, verticalPeak = 1.18,
-        verticalShape = ProfileEditorEngine.CurveShape.SOFT_START),
-    HotkeyPresetDef("SNIPER + SHOTGUN", 90.0, 240.0, 1.25, 0.92, whole = false,
+        verticalStartIn = 3.0, verticalEndIn = 35.0, verticalPeak = 1.7,
+        verticalShape = ProfileEditorEngine.CurveShape.TARGET_LOCK, verticalCeil = 1.25
+    ),
+    HotkeyPresetDef(
+        "PISTOL + SHOTGUN", 10.0, 65.0, 2.0, 0.93, whole = false,
         shape = ProfileEditorEngine.CurveShape.SMOOTH,
-        verticalStartIn = 120.0, verticalEndIn = 300.0, verticalPeak = 1.10,
-        verticalShape = ProfileEditorEngine.CurveShape.SOFT_START),
+        verticalStartIn = 3.0, verticalEndIn = 40.0, verticalPeak = 1.8,
+        verticalShape = ProfileEditorEngine.CurveShape.TARGET_LOCK, verticalCeil = 1.3
+    ),
+    HotkeyPresetDef(
+        "SNIPER + SHOTGUN", 5.0, 70.0, 2.7, 1.0, whole = false,
+        shape = ProfileEditorEngine.CurveShape.SMOOTH,
+        verticalStartIn = 3.0, verticalEndIn = 45.0, verticalPeak = 2.2,
+        verticalShape = ProfileEditorEngine.CurveShape.TARGET_LOCK, verticalCeil = 1.5
+    ),
     HotkeyPresetDef(
         "ZAPPER + ELDER GUN + GOLD DIGGER",
-        45.0,
-        190.0,
-        1.38,
-        0.90,
+        8.0,
+        55.0,
+        2.2,
+        0.95,
         whole = false,
         shape = ProfileEditorEngine.CurveShape.FAST_RAMP,
-        verticalStartIn = 75.0,
-        verticalEndIn = 230.0,
-        verticalPeak = 1.18,
-        verticalShape = ProfileEditorEngine.CurveShape.SOFT_START
+        verticalStartIn = 3.0,
+        verticalEndIn = 40.0,
+        verticalPeak = 2.0,
+        verticalShape = ProfileEditorEngine.CurveShape.TARGET_LOCK,
+        verticalCeil = 1.4
     ),
     HotkeyPresetDef(
         "SNIPER FALLBACK (3-SLOT)",
-        110.0,
-        300.0,
-        1.12,
-        1.00,
-        whole = true,
-        shape = ProfileEditorEngine.CurveShape.SMOOTH
+        5.0,
+        75.0,
+        2.5,
+        1.0,
+        whole = false,
+        shape = ProfileEditorEngine.CurveShape.SMOOTH,
+        verticalStartIn = 3.0,
+        verticalEndIn = 45.0,
+        verticalPeak = 2.3,
+        verticalShape = ProfileEditorEngine.CurveShape.TARGET_LOCK,
+        verticalCeil = 1.5
     )
 )
+
+internal fun parseShape(raw: String): ProfileEditorEngine.CurveShape =
+    runCatching { ProfileEditorEngine.CurveShape.valueOf(raw.trim().uppercase()) }
+        .getOrDefault(ProfileEditorEngine.CurveShape.SMOOTH)
+
+/**
+ * Resolves the preset cycle for a profile: uses the profile's own
+ * "Preset cycle" JSON section when it defines at least one valid stage,
+ * otherwise falls back to the built-in Dead End cycle.
+ */
+/**
+ * TARGET_LOCK without an explicit ceiling defaults to 1.0x (neutral at high
+ * speed) — always a valid ceiling for any floor >= 1.0.
+ */
+private fun defaultCeil(shape: String, ceil: Double): Double =
+    if (shape.trim().uppercase() == "TARGET_LOCK" && ceil <= 0.0) 1.0 else ceil
+
+internal fun resolveCycle(profile: Profile?): List<HotkeyPresetDef> {
+    val fromProfile = profile?.presetCycle
+        ?.filter { it.label.isNotBlank() && it.endIn > it.startIn && it.startIn > 0.0 && it.peak >= 1.0 }
+        ?.map { stage ->
+            HotkeyPresetDef(
+                label = stage.label,
+                startIn = stage.startIn,
+                endIn = stage.endIn,
+                peak = stage.peak,
+                yx = stage.yx,
+                whole = stage.whole,
+                shape = parseShape(stage.shape),
+                verticalStartIn = stage.verticalStartIn.takeIf { it > 0.0 } ?: stage.startIn,
+                verticalEndIn = stage.verticalEndIn.takeIf { it > 0.0 } ?: stage.endIn,
+                verticalPeak = stage.verticalPeak,
+                verticalShape = parseShape(stage.verticalShape),
+                ceilGain = defaultCeil(stage.shape, stage.ceil),
+                verticalCeil = defaultCeil(stage.verticalShape, stage.verticalCeil)
+            )
+        }
+        ?.takeIf { it.isNotEmpty() }
+    return fromProfile ?: deadEndHotkeyPresetCycle
+}
 
 /**
  * Global hotkeys for in-game sens control — no alt-tab required mid-round.
@@ -108,7 +182,8 @@ class HotkeyManager(
         val clutchHighActive: Boolean = false,
         val accelEnabled: Boolean = true,
         val lastAction: String = "—",
-        val error: String? = null
+        val error: String? = null,
+        val presetLabels: List<String> = deadEndHotkeyPresetCycle.map { it.label }
     )
 
     private val _state = MutableStateFlow(HotkeyState())
@@ -125,6 +200,14 @@ class HotkeyManager(
 
     private var baselineProfile: Profile? = null
     private var baselineSettings: Settings? = null
+
+    /** The preset cycle currently in force (profile-defined if present, else built-in). */
+    private var activeCycle: List<HotkeyPresetDef> = deadEndHotkeyPresetCycle
+
+    private fun refreshCycle(profile: Profile?) {
+        activeCycle = resolveCycle(profile)
+        _state.value = _state.value.copy(presetLabels = activeCycle.map { it.label })
+    }
 
     /** Virtual-key & modifier constants (mirroring WinUser.h). */
     private object Win {
@@ -171,6 +254,7 @@ class HotkeyManager(
         baselineSettings = settings
         baselineProfile = settings.profiles.getOrNull(profileIndex)
         presetCycleIndex = -1
+        refreshCycle(baselineProfile)
 
         val thread = Thread({ runMessagePump() }, "Ace-HotkeyPump")
         thread.isDaemon = true
@@ -185,6 +269,7 @@ class HotkeyManager(
             baselineSettings = settings
             baselineProfile = settings.profiles.getOrNull(profileIndex)
             currentProfileIndex = profileIndex
+            refreshCycle(baselineProfile)
         }
     }
 
@@ -200,6 +285,7 @@ class HotkeyManager(
         } else {
             HotkeyState()
         }
+        refreshCycle(baselineProfile)
     }
 
     private fun runMessagePump() {
@@ -216,7 +302,7 @@ class HotkeyManager(
                 synchronized(registered) { registered.add(b.id) }
             }
         }
-        if (ok) _state.value = HotkeyState(lastAction = "HOTKEYS ARMED")
+        if (ok) _state.value = _state.value.copy(lastAction = "HOTKEYS ARMED")
 
         val msg = com.sun.jna.platform.win32.WinUser.MSG()
         try {
@@ -328,28 +414,34 @@ class HotkeyManager(
         val baseProfile = baselineProfile ?: return
         val s = _state.value
 
-        presetCycleIndex = (presetCycleIndex + 1) % deadEndHotkeyPresetCycle.size
-        val def = deadEndHotkeyPresetCycle[presetCycleIndex]
-        val wholeMode = def.whole ?: baseProfile.speed.whole
-        val newProfile = baseProfile.copy(
-            accelX = retuneLut(baseProfile.accelX, def),
-            accelY = if (wholeMode) noaccel() else retuneVerticalLut(baseProfile.accelY, def),
-            speed = baseProfile.speed.copy(whole = wholeMode),
-            yxRatio = def.yx
-        )
-        val newSettings = replaceProfile(base, newProfile, currentProfileIndex)
-        applySettings("hotkey preset", newSettings).onSuccess {
-            onSettingsApplied(newSettings)
-            baselineProfile = newProfile
-            _state.value = s.copy(
-                clutchLowActive = false,
-                clutchHighActive = false,
-                accelEnabled = true,
-                lastAction = "PRESET → ${def.label}",
-                error = null
+        try {
+            val cycle = activeCycle
+            presetCycleIndex = (presetCycleIndex + 1) % cycle.size
+            val def = cycle[presetCycleIndex]
+            val wholeMode = def.whole ?: baseProfile.speed.whole
+            val newProfile = baseProfile.copy(
+                accelX = retuneLut(baseProfile.accelX, def),
+                accelY = if (wholeMode) noaccel() else retuneVerticalLut(baseProfile.accelY, def),
+                speed = baseProfile.speed.copy(whole = wholeMode),
+                yxRatio = def.yx
             )
-        }.onFailure {
-            _state.value = s.copy(error = "Preset failed: ${it.message}")
+            val newSettings = replaceProfile(base, newProfile, currentProfileIndex)
+            applySettings("hotkey preset", newSettings).onSuccess {
+                onSettingsApplied(newSettings)
+                baselineProfile = newProfile
+                _state.value = s.copy(
+                    clutchLowActive = false,
+                    clutchHighActive = false,
+                    accelEnabled = true,
+                    lastAction = "PRESET → ${def.label}",
+                    error = null
+                )
+            }.onFailure {
+                _state.value = s.copy(error = "Preset failed: ${it.message}")
+            }
+        } catch (e: Exception) {
+            // A malformed profile-defined stage must not kill the hotkey pump.
+            _state.value = s.copy(error = "Preset failed: ${e.message}")
         }
     }
 
@@ -362,16 +454,19 @@ class HotkeyManager(
     private fun noaccel() = AccelParams(mode = "noaccel", gain = true)
 
     private fun retuneLut(a: AccelParams, def: HotkeyPresetDef): AccelParams {
-        val points = ProfileEditorEngine.generate(def.startIn, def.endIn, def.peak, def.shape)
+        val points = ProfileEditorEngine.generateFor(
+            def.startIn, def.endIn, def.peak, def.shape, def.ceilGain
+        )
         return a.copy(mode = "lut", gain = true, data = ProfileEditorEngine.flatten(points))
     }
 
     private fun retuneVerticalLut(a: AccelParams, def: HotkeyPresetDef): AccelParams {
-        val points = ProfileEditorEngine.generate(
+        val points = ProfileEditorEngine.generateFor(
             def.verticalStartIn,
             def.verticalEndIn,
             def.verticalPeak,
-            def.verticalShape
+            def.verticalShape,
+            def.verticalCeil
         )
         return a.copy(mode = "lut", gain = true, data = ProfileEditorEngine.flatten(points))
     }
@@ -388,6 +483,7 @@ class HotkeyManager(
         val base = baselineSettings ?: return
         applySettings("restore baseline", base).onSuccess { onSettingsApplied(base) }
         _state.value = HotkeyState(lastAction = "RESTORED BASELINE")
+        refreshCycle(base.profiles.getOrNull(currentProfileIndex))
     }
 
     private fun applySettings(label: String, settings: Settings): Result<Unit> =
