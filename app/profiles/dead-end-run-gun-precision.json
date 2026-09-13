@@ -1,0 +1,172 @@
+{
+  "version" : "1.7.0",
+  "defaultDeviceConfig" : {
+    "disable" : true,
+    "setExtraInfo" : false,
+    "Use constant time interval based on polling rate" : false,
+    "DPI (normalizes input speed unit: counts/ms -> in/s)" : 1200,
+    "Polling rate Hz (keep at 0 for automatic adjustment)" : 1000,
+    "minimumTime" : 0.0625,
+    "maximumTime" : 100.0
+  },
+  "profiles" : [ {
+    "name" : "Dead End | Leaderboard Target-Lock | 1200 DPI",
+    "Stretches domain for horizontal vs vertical inputs" : {
+      "x" : 1.0,
+      "y" : 1.0
+    },
+    "Stretches accel range for horizontal vs vertical inputs" : {
+      "x" : 1.0,
+      "y" : 1.0
+    },
+    "Whole or horizontal accel parameters" : {
+      "mode" : "lut",
+      "Gain / Velocity" : true,
+      "inputOffset" : 0.0,
+      "outputOffset" : 0.0,
+      "acceleration" : 0.005,
+      "decayRate" : 0.1,
+      "gamma" : 1.0,
+      "motivity" : 1.5,
+      "exponentClassic" : 2.0,
+      "scale" : 1.0,
+      "exponentPower" : 0.05,
+      "limit" : 1.5,
+      "syncSpeed" : 5.0,
+      "smooth" : 0.5,
+      "Cap / Jump" : {
+        "x" : 15.0,
+        "y" : 1.5
+      },
+      "Cap mode" : "output",
+      "data" : [ 0.0, 0.0, 2.5, 2.5, 5.0, 5.0, 10.0, 10.29, 15.0, 16.62, 20.0, 24.6, 25.0, 34.59, 30.0, 46.83, 35.0, 61.32, 40.0, 77.92, 45.0, 96.26, 50.0, 115.81, 55.0, 135.86, 60.0, 155.5, 65.0, 173.64, 70.0, 189.0, 85.0, 229.5, 100.0, 270.0, 150.0, 405.0 ]
+    },
+    "Vertical accel parameters" : {
+      "mode" : "lut",
+      "Gain / Velocity" : true,
+      "inputOffset" : 0.0,
+      "outputOffset" : 0.0,
+      "acceleration" : 0.005,
+      "decayRate" : 0.1,
+      "gamma" : 1.0,
+      "motivity" : 1.5,
+      "exponentClassic" : 2.0,
+      "scale" : 1.0,
+      "exponentPower" : 0.05,
+      "limit" : 1.5,
+      "syncSpeed" : 5.0,
+      "smooth" : 0.5,
+      "Cap / Jump" : {
+        "x" : 15.0,
+        "y" : 1.5
+      },
+      "Cap mode" : "output",
+      "data" : [ 0.0, 0.0, 1.5, 3.3, 3.0, 6.6, 5.0, 10.98, 10.0, 21.48, 15.0, 30.92, 20.0, 38.98, 25.0, 45.63, 30.0, 51.12, 35.0, 56.01, 40.0, 61.1, 45.0, 67.5, 50.0, 75.0, 60.0, 90.0, 80.0, 120.0, 100.0, 150.0, 150.0, 225.0 ]
+    },
+    "Input speed calculation parameters" : {
+      "Whole/combined accel (set false for 'by component' mode)" : false,
+      "lpNorm" : 2.0,
+      "Time in ms after which an input is weighted at half its original value." : 2.0,
+      "Time in ms after which scale is weighted at half its original value." : 0.0,
+      "Time in ms after which an output is weighted at half its original value." : 0.0
+    },
+    "Output DPI" : 1200.0,
+    "Y/X output DPI ratio (vertical sens multiplier)" : 1.0,
+    "L/R output DPI ratio (left sens multiplier)" : 1.0,
+    "U/D output DPI ratio (up sens multiplier)" : 1.0,
+    "Degrees of rotation" : 0.0,
+    "Degrees of angle snapping" : 0.0,
+    "Input Speed Cap" : 0.0,
+    "Preset cycle" : [
+      {
+        "label" : "PISTOL",
+        "startIn" : 8.0,
+        "endIn" : 60.0,
+        "peak" : 1.9,
+        "yx" : 0.95,
+        "whole" : false,
+        "shape" : "SMOOTH",
+        "verticalStartIn" : 3.0,
+        "verticalEndIn" : 35.0,
+        "verticalPeak" : 1.7,
+        "verticalShape" : "TARGET_LOCK",
+        "ceil" : 0.0,
+        "verticalCeil" : 1.25
+      },
+      {
+        "label" : "PISTOL + SHOTGUN",
+        "startIn" : 10.0,
+        "endIn" : 65.0,
+        "peak" : 2.0,
+        "yx" : 0.93,
+        "whole" : false,
+        "shape" : "SMOOTH",
+        "verticalStartIn" : 3.0,
+        "verticalEndIn" : 40.0,
+        "verticalPeak" : 1.8,
+        "verticalShape" : "TARGET_LOCK",
+        "ceil" : 0.0,
+        "verticalCeil" : 1.3
+      },
+      {
+        "label" : "SNIPER + SHOTGUN",
+        "startIn" : 5.0,
+        "endIn" : 70.0,
+        "peak" : 2.7,
+        "yx" : 1.0,
+        "whole" : false,
+        "shape" : "SMOOTH",
+        "verticalStartIn" : 3.0,
+        "verticalEndIn" : 45.0,
+        "verticalPeak" : 2.2,
+        "verticalShape" : "TARGET_LOCK",
+        "ceil" : 0.0,
+        "verticalCeil" : 1.5
+      },
+      {
+        "label" : "ZAPPER + ELDER GUN + GOLD DIGGER",
+        "startIn" : 8.0,
+        "endIn" : 55.0,
+        "peak" : 2.2,
+        "yx" : 0.95,
+        "whole" : false,
+        "shape" : "FAST_RAMP",
+        "verticalStartIn" : 3.0,
+        "verticalEndIn" : 40.0,
+        "verticalPeak" : 2.0,
+        "verticalShape" : "TARGET_LOCK",
+        "ceil" : 0.0,
+        "verticalCeil" : 1.4
+      },
+      {
+        "label" : "SNIPER FALLBACK (3-SLOT)",
+        "startIn" : 5.0,
+        "endIn" : 75.0,
+        "peak" : 2.5,
+        "yx" : 1.0,
+        "whole" : false,
+        "shape" : "SMOOTH",
+        "verticalStartIn" : 3.0,
+        "verticalEndIn" : 45.0,
+        "verticalPeak" : 2.3,
+        "verticalShape" : "TARGET_LOCK",
+        "ceil" : 0.0,
+        "verticalCeil" : 1.5
+      }
+    ]
+  } ],
+  "devices" : [ {
+    "name" : "Logitech USB Receiver",
+    "profile" : "Dead End | Leaderboard Target-Lock | 1200 DPI",
+    "id" : "HID\\VID_046D&PID_C539&MI_01&Col01",
+    "config" : {
+      "disable" : false,
+      "setExtraInfo" : false,
+      "Use constant time interval based on polling rate" : false,
+      "DPI (normalizes input speed unit: counts/ms -> in/s)" : 1200,
+      "Polling rate Hz (keep at 0 for automatic adjustment)" : 1000,
+      "minimumTime" : 0.0625,
+      "maximumTime" : 100.0
+    }
+  } ]
+}

@@ -12,6 +12,35 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 data class Vec2(val x: Double = 1.0, val y: Double = 1.0)
 
+/**
+ * One stage of a profile-defined hotkey preset cycle (the Ctrl+Shift+F1
+ * weapon-stage switcher). This section lives in the profile JSON only — the
+ * Raw Accel driver never sees it (the bridge ignores unknown keys).
+ *
+ * Semantics match HotkeyManager.HotkeyPresetDef:
+ *  - For an accelerator shape, [peak] is the max gain and the curve ramps
+ *    1.0 -> [peak] over [startIn]..[endIn].
+ *  - For the TARGET_LOCK shape, [peak] is the low-speed FLOOR gain (the
+ *    headshot lock) and [ceil] is the high-speed ceiling; the curve decays
+ *    floor -> ceiling over [startIn]..[endIn].
+ */
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class PresetStage(
+    val label: String = "",
+    val startIn: Double = 0.0,
+    val endIn: Double = 0.0,
+    val peak: Double = 1.0,
+    val yx: Double = 1.0,
+    val whole: Boolean? = null,
+    val shape: String = "SMOOTH",
+    val verticalStartIn: Double = 0.0,
+    val verticalEndIn: Double = 0.0,
+    val verticalPeak: Double = 1.0,
+    val verticalShape: String = "SMOOTH",
+    val ceil: Double = 0.0,
+    val verticalCeil: Double = 0.0
+)
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class AccelParams(
     val mode: String = "noaccel",
@@ -64,7 +93,13 @@ data class Profile(
     @param:JsonProperty("U/D output DPI ratio (up sens multiplier)") @get:JsonProperty("U/D output DPI ratio (up sens multiplier)") val udRatio: Double = 1.0,
     @param:JsonProperty("Degrees of rotation") @get:JsonProperty("Degrees of rotation") val rotation: Double = 0.0,
     @param:JsonProperty("Degrees of angle snapping") @get:JsonProperty("Degrees of angle snapping") val snap: Double = 0.0,
-    @param:JsonProperty("Input Speed Cap") @get:JsonProperty("Input Speed Cap") val speedCap: Double = 0.0
+    @param:JsonProperty("Input Speed Cap") @get:JsonProperty("Input Speed Cap") val speedCap: Double = 0.0,
+    /**
+     * Optional app-only hotkey preset cycle for this profile. When present
+     * (non-empty) it replaces the built-in Dead End cycle for the
+     * Ctrl+Shift+F1 stage switcher. Not part of the Raw Accel driver schema.
+     */
+    @param:JsonProperty("Preset cycle") @get:JsonProperty("Preset cycle") val presetCycle: List<PresetStage> = emptyList()
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
